@@ -1,0 +1,6 @@
+Name       = Voltseon's Overworld Encounters
+Version    = 2.0
+Essentials = 21.1
+Requires   = rainefallUtils
+Link       = https://voltseon.com/
+Credits    = Voltseon

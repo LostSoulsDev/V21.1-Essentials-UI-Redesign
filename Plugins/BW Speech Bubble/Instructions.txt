@@ -1,0 +1,82 @@
+Useage instructions. All original methods are still kept so should not break existing events
+using the old call methods. This is a modification to add on new features. 
+
+Old system instructions:
+To call a window you will need to put a script call function before each Show Text command within the event. 
+Old method is pbCallBub(Window type,Event ID) Replace Event ID with the number of the event you want talking, for example:
+
+pbCallBub(1,10) 10 is the event ID 1 is the window type you want. 
+ 1 - Floating bubble
+ 2 - Speech bubble with arrow
+ 3 - Short arrow window
+ 4 - Shocked window
+ 
+Modified method for the old call method to make things easier, if you have an event that has multiple lines of text. 
+Instead of doing the script call every single time you can use the new helper method which should be used anyway instead of the
+old one going forward. 
+
+pbSpeech(Window Type,Event ID,keepalive=false)
+
+So like the old method you have the window type 1-4 and then the event ID. Now if you put true in the call, it will tell the script
+the talking event is the main one saving you having to put in the call multiple times for an event that has more than 1 Show Text call. 
+
+When you are about to finish the text you will want to call the script before the Show Text function as pbSpeech(1,10,false)
+This will say you no longer want to have that event ID as the main speaker any more and you are about to change who is talking.
+
+New methods for the new bubble functions. 
+So now we have additional script calls and functions. The great thing about this new function is you can have dynamic floating bubbles
+that do not affect the gameplay when being shown. 
+
+Two options:
+
+	Option 1 - Event comments
+
+If you have an event you would like to show a thought bubble over you can now add a comment in the event and use:
+pbSpeechBubbleShow(Event ID, "Text")
+
+What this allows is an event to show a speech bubble above the target. So you can put pbSpeechBubbleShow(-1, "Ooops") as an example which 
+will show a thought bubble above the player and will follow the player. 
+
+Some new options within that call now though:
+
+If you want that text to automatically disappear after a few seconds you can do pbSpeechBubble(-1, "Ooops", 3)
+The 3 will tell the script after 3 seconds, you want the text to dispose and not show again until the event page calls it. 
+
+You now also have distance tracking as an options too. 
+Adding :Max => Tiles will allow the event to only show the bubble if the player is within the number of tiles defined. 
+Please make sure when using this call, it's the last option otherwise weird things happen. For example:
+pbSpeechBubbleShow(-1, "Ooops", :Max => 4) 
+
+This will show text Ooops above the player only if the player is within 4 tiles of the event in any direction. 
+When the player walks away, the text will disappear. 
+
+The function options are as follows:
+
+3 after the text - Time in seconds the window shows for
+:F - This means you want the window to fade in and out 
+:A - You want this bubble window to avoid others that are showing. 
+:Shock - This will show an animated shock bubble above the target
+:Max => Tiles - This must be at the end of the script call bracket to work, tells the script how many tiles the player needs to be in to show. 
+
+You can also manually call this via the script call function within the event. 
+For example, I want to show a shocked bubble that fades in and lasts for 3 seconds above event 10 you would do:
+
+pbSpeechBubble(10, "Help!", 3, :F, :Shock)
+This will call the bubble over the event ID 10 with Help! and will fade in and shake with the shocked window skin before disappearing after 3 seconds. 
+You can stack multiple bubbles within the game screen by simply calling within the event each pbSpeechBubble command for each event id.
+Try avoiding having too many as again can get a bit weird. 
+
+If you don't use the automatic clearing call, you can manually clear every bubble on screen by using 
+pbClearBub
+
+This will clear all bubbles currently shown on the screen. 
+
+And finally, I have added a seperate call function if you want an event to check if a player is nearby. 
+
+pbCheckDist(tiles, eventID)
+
+This script check will see if the player is within a certain number of tiles to the defined event and return true. 
+So for example if you have a conditional branch within an event that is running as parrell process. 
+
+You can have this check active and it will trigger your events movements that you define within the conditional branch once the player is near that event. 
+Best not to do too many events with these on a map as can cause some major lag when over used. 

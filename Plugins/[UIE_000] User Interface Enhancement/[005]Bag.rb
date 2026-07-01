@@ -1,7 +1,7 @@
 #===============================================================================
-# Custom Bag UI
-# Fully custom override of PokemonBag_Scene.
-# Graphics folder: Graphics/Custom UI/Bag/
+#                          Custom Bag Screen
+#                               V 1.0.4
+#                        Developed by Carmaniac
 #===============================================================================
 class PokemonBag_Scene
 

@@ -1,0 +1,721 @@
+
+=================
+
+[2026-07-03 21:34:05 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 1 (coords 15,16), map 6 (Route 1)
+Exception: NoMethodError
+Message: undefined method `name' for nil:NilClass
+
+***Full script:
+Online.ping
+
+Backtrace:
+[User Interface Enhancement] [000]Online.rb:64:in `ping'
+(eval):1:in `execute_script'
+Interpreter:138:in `eval'
+Interpreter:138:in `execute_script'
+Interpreter_Commands:1177:in `command_355'
+Interpreter_Commands:116:in `execute_command'
+Interpreter:130:in `block in update'
+Interpreter:86:in `loop'
+Interpreter:86:in `update'
+Scene_Map:167:in `block in update'
+
+=================
+
+[2026-07-03 21:40:30 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 1 (coords 15,16), map 6 (Route 1)
+Exception: NoMethodError
+Message: undefined method `secretID' for #<Player Pokémon Trainer A @party=[:PIKACHU, :PIDGEOTTO, :KADABRA, :GYARADOS, :DIGLETT, :CHANSEY]>
+
+***Full script:
+Online.ping
+
+Backtrace:
+[User Interface Enhancement] [000]Online.rb:67:in `ping'
+(eval):1:in `execute_script'
+Interpreter:138:in `eval'
+Interpreter:138:in `execute_script'
+Interpreter_Commands:1177:in `command_355'
+Interpreter_Commands:116:in `execute_command'
+Interpreter:130:in `block in update'
+Interpreter:86:in `loop'
+Interpreter:86:in `update'
+Scene_Map:167:in `block in update'
+
+=================
+
+[2026-07-03 21:41:46 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 1 (coords 15,16), map 6 (Route 1)
+Exception: NoMethodError
+Message: undefined method `iso8601' for 2026-07-03 20:41:46.3926937 UTC:Time
+
+***Full script:
+Online.ping
+
+Backtrace:
+[User Interface Enhancement] [000]Online.rb:68:in `ping'
+(eval):1:in `execute_script'
+Interpreter:138:in `eval'
+Interpreter:138:in `execute_script'
+Interpreter_Commands:1177:in `command_355'
+Interpreter_Commands:116:in `execute_command'
+Interpreter:130:in `block in update'
+Interpreter:86:in `loop'
+Interpreter:86:in `update'
+Scene_Map:167:in `block in update'
+
+=================
+
+[2026-07-03 21:44:19 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 1 (coords 15,16), map 6 (Route 1)
+Exception: NoMethodError
+Message: undefined method `to_json' for {:method=>"POST", :endpoint=>"trainers", :body=>{:trainer_name=>"A", :trainer_id=>2713322879, :secret_id=>2713322879, :last_seen=>"2026-07-03T20:44:19Z"}, :params=>nil}:Hash
+
+***Full script:
+Online.ping
+
+Backtrace:
+[User Interface Enhancement] [000]Online.rb:25:in `request'
+[User Interface Enhancement] [000]Online.rb:47:in `post'
+[User Interface Enhancement] [000]Online.rb:64:in `ping'
+(eval):1:in `execute_script'
+Interpreter:138:in `eval'
+Interpreter:138:in `execute_script'
+Interpreter_Commands:1177:in `command_355'
+Interpreter_Commands:116:in `execute_command'
+Interpreter:130:in `block in update'
+Interpreter:86:in `loop'
+
+=================
+
+[2026-07-03 21:45:14 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Error in Plugin: [User Interface Enhancement]
+Exception: LoadError
+Message: cannot load such file -- json
+
+Backtrace:
+[User Interface Enhancement] [000]Online.rb:1:in `require'
+[User Interface Enhancement] [000]Online.rb:1:in `<main>'
+Section008:635:in `eval'
+Section008:635:in `block (2 levels) in runPlugins'
+Section008:625:in `each'
+Section008:625:in `block in runPlugins'
+Section008:616:in `each'
+Section008:616:in `runPlugins'
+Section413:28:in `mainFunctionDebug'
+Section413:18:in `block in mainFunction'
+
+=================
+
+[2026-07-03 21:46:05 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 1 (coords 15,16), map 6 (Route 1)
+Exception: NameError
+Message: uninitialized constant Online::JSON
+
+***Full script:
+Online.ping
+
+Backtrace:
+[User Interface Enhancement] [000]Online.rb:20:in `request'
+[User Interface Enhancement] [000]Online.rb:47:in `post'
+[User Interface Enhancement] [000]Online.rb:64:in `ping'
+(eval):1:in `execute_script'
+Interpreter:138:in `eval'
+Interpreter:138:in `execute_script'
+Interpreter_Commands:1177:in `command_355'
+Interpreter_Commands:116:in `execute_command'
+Interpreter:130:in `block in update'
+Interpreter:86:in `loop'
+
+=================
+
+[2026-07-03 21:46:58 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 1 (coords 15,16), map 6 (Route 1)
+Exception: NameError
+Message: uninitialized constant JSON
+
+***Full script:
+Online.ping
+
+Backtrace:
+[User Interface Enhancement] [000]Online.rb:20:in `request'
+[User Interface Enhancement] [000]Online.rb:47:in `post'
+[User Interface Enhancement] [000]Online.rb:64:in `ping'
+(eval):1:in `execute_script'
+Interpreter:138:in `eval'
+Interpreter:138:in `execute_script'
+Interpreter_Commands:1177:in `command_355'
+Interpreter_Commands:116:in `execute_command'
+Interpreter:130:in `block in update'
+Interpreter:86:in `loop'
+
+=================
+
+[2026-07-03 22:40:30 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Error in Plugin: [User Interface Enhancement]
+Exception: SyntaxError
+Message: [User Interface Enhancement] [000]Online.rb:63: premature end of char-class: /\A"((?:[^"\]|\.)*)"\s*:\s*/
+[User Interface Enhancement] [000]Online.rb:120: syntax error, unexpected string literal, expecting ']'
+        when "]" then depth -= 1; break if de...
+               ^
+[User Interface Enhancement] [000]Online.rb:123: syntax error, unexpected backslash, expecting ')'
+...str[i] == '"' && str[i-1] != "\")
+...                              ^
+[User Interface Enhancement] [000]Online.rb:130: syntax error, unexpected backslash, expecting ')'
+...str[i] == '"' && str[i-1] != "\")
+...                              ^
+[User Interface Enhancement] [000]Online.rb:132: syntax error, unexpected local variable or method, expecting ')'
+    when "t" then [true,  4]
+          ^
+[User Interface Enhancement] [000]Online.rb:133: syntax error, unexpected local variable or method, expecting ')'
+    when "f" then [false, 5]
+          ^
+[User Interface Enhancement] [000]Online.rb:134: syntax error, unexpected local variable or method, expecting ')'
+    when "n" then [nil,   4]
+          ^
+[User Interface Enhancement] [000]Online.rb:137: syntax error, unexpected string literal
+      val = m[0].include?(".") ? m[0].to_f : m[0].to_i
+                            ^
+[User Interface Enhancement] [000]Online.rb:144: syntax error, unexpected local variable or method, expecting ')'
+    status = str[/"status":\s*(\d+)/, 1].to_i
+                   ^~~~~~
+[User Interface Enhancement] [000]Online.rb:145: syntax error, unexpected local variable or method, expecting ')'
+... Extract body value after "body":
+...                           ^~~~
+[User Interface Enhancement] [000]Online.rb:146: syntax error, unexpected local variable or method, expecting ')'
+...  body_start = str.index(/"body"\s*:\s*/)
+...                           ^~~~
+[User Interface Enhancement] [000]Online.rb:148: syntax error, unexpected local variable or method, expecting ')'
+... str[body_start..].match(/"body"\s*:\s*/)[0].length)..]
+...                           ^~~~
+[User Interface Enhancement] [000]Online.rb:149: syntax error, unexpected '}', expecting ')'
+...y_str = body_str.strip.chomp("}")
+...                              ^
+[User Interface Enhancement] [000]Online.rb:152: syntax error, unexpected local variable or method, expecting ')'
+    { "status" => status, "body" => body }
+       ^~~~~~
+[User Interface Enhancement] [000]Online.rb:152: syntax error, unexpected local variable or method, expecting ')'
+    { "status" => status, "body" => body }
+                           ^~~~
+[User Interface Enhancement] [000]Online.rb:158: syntax error, unexpected local variable or method, expecting ')'
+      "method"   => method,
+       ^~~~~~
+[User Interface Enhancement] [000]Online.rb:159: syntax error, unexpected local variable or method, expecting ')'
+      "endpoint" => endpoint,
+       ^~~~~~~~
+[User Interface Enhancement] [000]Online.rb:160: syntax error, unexpected local variable or method, expecting ')'
+      "body"     => body,
+       ^~~~
+[User Interface Enhancement] [000]Online.rb:161: syntax error, unexpected local variable or method, expecting ')'
+      "params"   => params
+       ^~~~~~
+[User Interface Enhancement] [000]Online.rb:164: syntax error, unexpected local variable or method, expecting ')'
+    File.open(REQUEST_FILE, "w") { |f| f.write(payload) }
+                             ^
+[User Interface Enhancement] [000]Online.rb:182: syntax error, unexpected constant, expecting ')'
+    request("GET", endpoint, params: params)
+             ^~~
+[User Interface Enhancement] [000]Online.rb:186: syntax error, unexpected constant, expecting ')'
+    request("POST", endpoint, body: body)
+             ^~~~
+[User Interface Enhancement] [000]Online.rb:190: syntax error, unexpected constant, expecting ')'
+    request("PATCH", endpoint, body: body, para...
+             ^~~~~
+[User Interface Enhancement] [000]Online.rb:194: syntax error, unexpected constant, expecting ')'
+    request("DELETE", endpoint, params: params)
+             ^~~~~~
+[User Interface Enhancement] [000]Online.rb:202: syntax error, unexpected constant, expecting ')'
+    request("UPSERT", endpoint, body: body)
+             ^~~~~~
+[User Interface Enhancement] [000]Online.rb:207: syntax error, unexpected local variable or method, expecting ')'
+    upsert("trainers", body: {
+            ^~~~~~~~
+[User Interface Enhancement] [000]Online.rb:208: syntax error, unexpected local variable or method, expecting ')'
+      "trainer_name" => $player.name,
+       ^~~~~~~~~~~~
+[User Interface Enhancement] [000]Online.rb:209: syntax error, unexpected local variable or method, expecting ')'
+      "trainer_id"   => $player.id,
+       ^~~~~~~~~~
+[User Interface Enhancement] [000]Online.rb:210: syntax error, unexpected local variable or method, expecting ')'
+      "secret_id"    => $player.id,
+       ^~~~~~~~~
+[User Interface Enhancement] [000]Online.rb:211: syntax error, unexpected local variable or method, expecting ')'
+      "last_seen"    => Time.now.utc.strftime...
+       ^~~~~~~~~
+[User Interface Enhancement] [000]Online.rb:211: unknown type of %string
+...> Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+...                            ^~~
+[User Interface Enhancement] [000]Online.rb:211: syntax error, unexpected end-of-input
+...> Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+...                            ^~~
+
+
+Backtrace:
+Section008:635:in `eval'
+Section008:635:in `block (2 levels) in runPlugins'
+Section008:625:in `each'
+Section008:625:in `block in runPlugins'
+Section008:616:in `each'
+Section008:616:in `runPlugins'
+Section413:28:in `mainFunctionDebug'
+Section413:18:in `block in mainFunction'
+Section014:80:in `pbCriticalCode'
+Section413:18:in `mainFunction'
+
+=================
+
+[2026-07-03 23:24:39 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 5 (coords 16,14), map 6 (Route 1)
+Exception: NameError
+Message: uninitialized constant Online::Window_Base
+
+***Full script:
+Online.open_menu
+
+Backtrace:
+[User Interface Enhancement] [000_1]MessageUI.rb:107:in `open_thread'
+[User Interface Enhancement] [000_1]MessageUI.rb:65:in `block in open_conversations'
+[User Interface Enhancement] [000_1]MessageUI.rb:49:in `loop'
+[User Interface Enhancement] [000_1]MessageUI.rb:49:in `open_conversations'
+[User Interface Enhancement] [000_1]MessageUI.rb:30:in `block in open_menu'
+[User Interface Enhancement] [000_1]MessageUI.rb:21:in `loop'
+[User Interface Enhancement] [000_1]MessageUI.rb:21:in `open_menu'
+(eval):1:in `execute_script'
+Interpreter:138:in `eval'
+Interpreter:138:in `execute_script'
+
+=================
+
+[2026-07-03 23:25:52 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 5 (coords 16,14), map 6 (Route 1)
+Exception: NameError
+Message: uninitialized constant Window_Base
+
+***Full script:
+Online.open_menu
+
+Backtrace:
+[User Interface Enhancement] [000_1]MessageUI.rb:107:in `open_thread'
+[User Interface Enhancement] [000_1]MessageUI.rb:65:in `block in open_conversations'
+[User Interface Enhancement] [000_1]MessageUI.rb:49:in `loop'
+[User Interface Enhancement] [000_1]MessageUI.rb:49:in `open_conversations'
+[User Interface Enhancement] [000_1]MessageUI.rb:30:in `block in open_menu'
+[User Interface Enhancement] [000_1]MessageUI.rb:21:in `loop'
+[User Interface Enhancement] [000_1]MessageUI.rb:21:in `open_menu'
+(eval):1:in `execute_script'
+Interpreter:138:in `eval'
+Interpreter:138:in `execute_script'
+
+=================
+
+[2026-07-04 20:29:54 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 5 (coords 16,14), map 6 (Route 1)
+Exception: NoMethodError
+Message: undefined method `request_async' for Online:Module
+
+***Full script:
+Online.open_menu
+
+Backtrace:
+[User Interface Enhancement] [000_2]Multiplayer.rb:81:in `sync_position'
+[User Interface Enhancement] [000_2]Multiplayer.rb:295:in `update'
+Scene_Map:124:in `block in miniupdate'
+Scene_Map:123:in `loop'
+Scene_Map:123:in `miniupdate'
+Messages:19:in `pbUpdateSceneMap'
+Messages:649:in `block in pbMessageDisplay'
+Messages:559:in `loop'
+Messages:559:in `pbMessageDisplay'
+Messages:696:in `pbMessage'
+
+=================
+
+[2026-07-04 21:40:27 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 5 (coords 16,14), map 6 (Route 1)
+Exception: NoMethodError
+Message: undefined method `blocking?' for Online:Module
+
+***Full script:
+Online.open_menu
+
+Backtrace:
+[User Interface Enhancement] [000_3]Multiplayer.rb:80:in `sync_position'
+[User Interface Enhancement] [000_3]Multiplayer.rb:307:in `update'
+Scene_Map:124:in `block in miniupdate'
+Scene_Map:123:in `loop'
+Scene_Map:123:in `miniupdate'
+Messages:19:in `pbUpdateSceneMap'
+Messages:649:in `block in pbMessageDisplay'
+Messages:559:in `loop'
+Messages:559:in `pbMessageDisplay'
+Messages:696:in `pbMessage'
+
+=================
+
+[2026-07-04 21:42:30 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 5 (coords 16,14), map 6 (Route 1)
+Exception: NoMethodError
+Message: undefined method `blocking?' for Online:Module
+
+***Full script:
+Online.open_menu
+
+Backtrace:
+[User Interface Enhancement] [000_3]Multiplayer.rb:80:in `sync_position'
+[User Interface Enhancement] [000_3]Multiplayer.rb:307:in `update'
+Scene_Map:124:in `block in miniupdate'
+Scene_Map:123:in `loop'
+Scene_Map:123:in `miniupdate'
+Messages:19:in `pbUpdateSceneMap'
+Messages:649:in `block in pbMessageDisplay'
+Messages:559:in `loop'
+Messages:559:in `pbMessageDisplay'
+Messages:696:in `pbMessage'
+
+=================
+
+[2026-07-04 22:23:41 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 5 (coords 16,14), map 6 (Route 1)
+Exception: NoMethodError
+Message: undefined method `step_anime=' for #<Game_Event>
+
+***Full script:
+Online.open_menu
+
+Backtrace:
+[User Interface Enhancement] [000_3]Multiplayer.rb:255:in `block in update'
+[User Interface Enhancement] [000_3]Multiplayer.rb:193:in `each'
+[User Interface Enhancement] [000_3]Multiplayer.rb:193:in `update'
+[User Interface Enhancement] [000_3]Multiplayer.rb:311:in `update'
+Scene_Map:124:in `block in miniupdate'
+Scene_Map:123:in `loop'
+Scene_Map:123:in `miniupdate'
+Messages:19:in `pbUpdateSceneMap'
+Messages:649:in `block in pbMessageDisplay'
+Messages:559:in `loop'
+
+=================
+
+[2026-07-05 20:01:45 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Error in Plugin: [User Interface Enhancement]
+Exception: LoadError
+Message: cannot load such file -- openssl
+
+Backtrace:
+[User Interface Enhancement] [000_3]Websocket.rb:10:in `require'
+[User Interface Enhancement] [000_3]Websocket.rb:10:in `<main>'
+Section008:635:in `eval'
+Section008:635:in `block (2 levels) in runPlugins'
+Section008:625:in `each'
+Section008:625:in `block in runPlugins'
+Section008:616:in `each'
+Section008:616:in `runPlugins'
+Section413:28:in `mainFunctionDebug'
+Section413:18:in `block in mainFunction'
+
+=================
+
+[2026-07-05 22:08:20 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Exception: NoMethodError
+Message: undefined method `check_event_trigger_touch' for #<FauxPlayer>
+
+Backtrace:
+Game_Character:564:in `move_generic'
+Stairs:97:in `stair_move_generic'
+Stairs:242:in `move_generic'
+Game_Character:569:in `move_down'
+[User Interface Enhancement] [000_4]Multiplayer.rb:163:in `apply_state'
+[User Interface Enhancement] [000_4]Multiplayer.rb:236:in `block in update'
+[User Interface Enhancement] [000_4]Multiplayer.rb:211:in `each'
+[User Interface Enhancement] [000_4]Multiplayer.rb:211:in `update'
+[User Interface Enhancement] [000_4]Multiplayer.rb:310:in `update'
+Scene_Map:168:in `block in update'
+
+=================
+
+[2026-07-05 22:11:50 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Exception: NoMethodError
+Message: undefined method `check_event_trigger_touch' for #<FauxPlayer>
+
+Backtrace:
+Game_Character:564:in `move_generic'
+Game_Character:569:in `move_down'
+[User Interface Enhancement] [000_4]Multiplayer.rb:163:in `apply_state'
+[User Interface Enhancement] [000_4]Multiplayer.rb:236:in `block in update'
+[User Interface Enhancement] [000_4]Multiplayer.rb:211:in `each'
+[User Interface Enhancement] [000_4]Multiplayer.rb:211:in `update'
+[User Interface Enhancement] [000_4]Multiplayer.rb:310:in `update'
+Scene_Map:168:in `block in update'
+Scene_Map:166:in `loop'
+Scene_Map:166:in `update'
+
+=================
+
+[2026-07-05 22:32:20 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 5 (coords 16,14), map 6 (Route 1)
+Exception: NoMethodError
+Message: undefined method `real_x=' for #<Game_Event>
+
+***Full script:
+Online.open_menu
+
+Backtrace:
+[User Interface Enhancement] [000_4]Multiplayer.rb:219:in `block in update'
+[User Interface Enhancement] [000_4]Multiplayer.rb:200:in `each'
+[User Interface Enhancement] [000_4]Multiplayer.rb:200:in `update'
+[User Interface Enhancement] [000_4]Multiplayer.rb:283:in `update'
+Scene_Map:124:in `block in miniupdate'
+Scene_Map:123:in `loop'
+Scene_Map:123:in `miniupdate'
+Messages:19:in `pbUpdateSceneMap'
+Messages:649:in `block in pbMessageDisplay'
+Messages:559:in `loop'
+
+=================
+
+[2026-07-05 22:45:01 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 5 (coords 16,14), map 6 (Route 1)
+Exception: NoMethodError
+Message: undefined method `x=' for #<Game_Event>
+
+***Full script:
+Online.open_menu
+
+Backtrace:
+[User Interface Enhancement] [000_4]Multiplayer.rb:229:in `block in drive_events'
+[User Interface Enhancement] [000_4]Multiplayer.rb:201:in `each'
+[User Interface Enhancement] [000_4]Multiplayer.rb:201:in `drive_events'
+[User Interface Enhancement] [000_4]Multiplayer.rb:197:in `update'
+[User Interface Enhancement] [000_4]Multiplayer.rb:296:in `update'
+Scene_Map:124:in `block in miniupdate'
+Scene_Map:123:in `loop'
+Scene_Map:123:in `miniupdate'
+Messages:19:in `pbUpdateSceneMap'
+Messages:649:in `block in pbMessageDisplay'
+
+=================
+
+[2026-07-05 23:30:31 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Exception: NoMethodError
+Message: undefined method `*' for nil:NilClass
+
+Backtrace:
+Game_Character:140:in `pattern_update_speed'
+Game_Character:1017:in `update_pattern'
+Game_Character:909:in `update'
+[v21.1 Hotfixes] Misc bug fixes.rb:592:in `update'
+Game_Map:462:in `block in update'
+Game_Map:462:in `each_value'
+Game_Map:462:in `update'
+StartGame:70:in `load'
+UI_Load:312:in `block in pbStartLoadScreen'
+UI_Load:306:in `loop'
+
+=================
+
+[2026-07-06 01:37:58 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Error in Plugin: [User Interface Enhancement]
+Exception: SyntaxError
+Message: [User Interface Enhancement] [000_2]MessageUI.rb:405: module definition in method body
+module Online
+^~~~~~~~~~~~~
+[User Interface Enhancement] [000_2]MessageUI.rb:406: dynamic constant assignment
+  WINDOW_WIDTH  = 800
+  ^~~~~~~~~~~~
+[User Interface Enhancement] [000_2]MessageUI.rb:407: dynamic constant assignment
+  WINDOW_HEIGHT = 480
+  ^~~~~~~~~~~~~
+[User Interface Enhancement] [000_2]MessageUI.rb:408: dynamic constant assignment
+  THREAD_X      = 0
+  ^~~~~~~~
+[User Interface Enhancement] [000_2]MessageUI.rb:409: dynamic constant assignment
+  THREAD_Y      = 48   # leave room for...
+  ^~~~~~~~
+[User Interface Enhancement] [000_2]MessageUI.rb:410: dynamic constant assignment
+  THREAD_W      = 800
+  ^~~~~~~~
+[User Interface Enhancement] [000_2]MessageUI.rb:411: dynamic constant assignment
+  THREAD_H      = 336  # leave room for...
+  ^~~~~~~~
+[User Interface Enhancement] [000_2]MessageUI.rb:412: dynamic constant assignment
+  LINE_HEIGHT   = 24
+  ^~~~~~~~~~~
+[User Interface Enhancement] [000_2]MessageUI.rb:413: dynamic constant assignment
+  LEFT_INDENT   = 8    # received messages...
+  ^~~~~~~~~~~
+[User Interface Enhancement] [000_2]MessageUI.rb:414: dynamic constant assignment
+  RIGHT_INDENT  = 300  # sent messages x of...
+  ^~~~~~~~~~~~
+[User Interface Enhancement] [000_2]MessageUI.rb:415: dynamic constant assignment
+  LINES_VISIBLE = (THREAD_H / LINE_HEIGHT).f...
+  ^~~~~~~~~~~~~
+[User Interface Enhancement] [000_2]MessageUI.rb:935: syntax error, unexpected end-of-input, expecting `end'
+
+Backtrace:
+Section008:635:in `eval'
+Section008:635:in `block (2 levels) in runPlugins'
+Section008:625:in `each'
+Section008:625:in `block in runPlugins'
+Section008:616:in `each'
+Section008:616:in `runPlugins'
+Section412:28:in `mainFunctionDebug'
+Section412:18:in `block in mainFunction'
+Section014:80:in `pbCriticalCode'
+Section412:18:in `mainFunction'
+
+=================
+
+[2026-07-06 01:44:51 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Script error in event 5 (coords 16,14), map 6 (Route 1)
+Exception: ArgumentError
+Message: comparison of String with 0 failed
+
+***Full script:
+Online.open_menu
+
+Backtrace:
+SpriteWindow_text:942:in `<'
+SpriteWindow_text:942:in `priv_update_cursor_rect'
+SpriteWindow_text:777:in `index='
+SpriteWindow_text:1206:in `index='
+Messages:728:in `pbShowCommands'
+[User Interface Enhancement] [000_2]MessageUI.rb:474:in `block in open_friend_requests'
+[User Interface Enhancement] [000_2]MessageUI.rb:473:in `each'
+[User Interface Enhancement] [000_2]MessageUI.rb:473:in `open_friend_requests'
+[User Interface Enhancement] [000_2]MessageUI.rb:454:in `block in open_friends_menu'
+[User Interface Enhancement] [000_2]MessageUI.rb:422:in `loop'
+
+=================
+
+[2026-07-06 13:49:41 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Exception: ArgumentError
+Message: comparison of String with 0 failed
+
+Backtrace:
+SpriteWindow_text:942:in `<'
+SpriteWindow_text:942:in `priv_update_cursor_rect'
+SpriteWindow_text:777:in `index='
+SpriteWindow_text:1206:in `index='
+Messages:728:in `pbShowCommands'
+[User Interface Enhancement] [000_5]Trade.rb:264:in `block in open_trade_screen'
+[User Interface Enhancement] [000_5]Trade.rb:257:in `loop'
+[User Interface Enhancement] [000_5]Trade.rb:257:in `open_trade_screen'
+[User Interface Enhancement] [000_4]Multiplayer.rb:629:in `block (2 levels) in wait_for_trade_party'
+[User Interface Enhancement] [000_4]Multiplayer.rb:625:in `each'
+
+=================
+
+[2026-07-06 14:07:28 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Error in Plugin: [User Interface Enhancement]
+Exception: SyntaxError
+Message: [User Interface Enhancement] [000_4]Multiplayer.rb:805: syntax error, unexpected `rescue' modifier, expecting ';' or '\n'
+class << SceneManager rescue nil
+                      ^~~~~~
+
+
+Backtrace:
+Section008:635:in `eval'
+Section008:635:in `block (2 levels) in runPlugins'
+Section008:625:in `each'
+Section008:625:in `block in runPlugins'
+Section008:616:in `each'
+Section008:616:in `runPlugins'
+Section412:28:in `mainFunctionDebug'
+Section412:18:in `block in mainFunction'
+Section014:80:in `pbCriticalCode'
+Section412:18:in `mainFunction'
+
+=================
+
+[2026-07-06 14:08:47 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Error in Plugin: [User Interface Enhancement]
+Exception: NameError
+Message: undefined method `main' for class `Scene_Load'
+
+Backtrace:
+[User Interface Enhancement] [000_4]Multiplayer.rb:813:in `<class:Scene_Load>'
+[User Interface Enhancement] [000_4]Multiplayer.rb:812:in `<main>'
+Section008:635:in `eval'
+Section008:635:in `block (2 levels) in runPlugins'
+Section008:625:in `each'
+Section008:625:in `block in runPlugins'
+Section008:616:in `each'
+Section008:616:in `runPlugins'
+Section412:28:in `mainFunctionDebug'
+Section412:18:in `block in mainFunction'

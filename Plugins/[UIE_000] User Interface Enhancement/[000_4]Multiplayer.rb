@@ -477,6 +477,17 @@ class Game_Player
         handle_incoming_trade(msg) if msg["trainer_b_id"].to_i == $player.id
       when "trade_accepted", "trade_declined", "trade_party", "trade_selection", "trade_confirm", "trade_cancel"
         OnlinePlayers.set_pending_trade(msg)
+      when "battle_challenge"
+        puts "[Battle] battle_challenge received: trainer_b_id=#{msg["trainer_b_id"]} my_id=#{$player.id}"
+        handle_incoming_battle_challenge(msg) if msg["trainer_b_id"].to_i == $player.id
+      when "battle_accepted", "battle_declined", "battle_cancel", "battle_party",
+           "battle_start", "battle_log", "battle_command_request", "battle_action",
+           "battle_end", "battle_choice"
+        OnlinePlayers.set_pending_trade(msg)
+      when "server_ack"
+        puts "[Server ACK] original_action=#{msg["original_action"] || msg["action"]} relayed=#{msg["relayed"]} raw=#{msg.inspect}"
+      else
+        puts "[Online] Unhandled WS action arrived: #{msg["action"].inspect}"
       end
     end
 
@@ -577,7 +588,7 @@ class Scene_Map
     when 0  # Trade
       initiate_trade(player)
     when 1  # Battle
-      pbMessage("Online battles coming soon!")
+      initiate_battle(player)
     when 2  # Message
       Online.open_compose(player.id.to_i, player.name)
     when 3  # View Trainer Card
@@ -753,9 +764,40 @@ end
 # Party and pokemon data parsers
 #==============================================================================#
 module Online
+  # The lightweight per-field regex extractors used elsewhere in this system
+  # (extract_field, quick_parse) only pull flat key/value pairs out of a JSON
+  # string — they can't handle nested objects/arrays like a Pokemon's
+  # "ivs"/"evs" hashes or its "moves" array, and were silently dropping them.
+  # For full Pokemon data (trade and battle both depend on this being
+  # complete), use Ruby's real JSON parser instead, and only fall back to the
+  # old flat parser if 'json' truly isn't available in this build.
+  begin
+    require 'json'
+    JSON_AVAILABLE = true
+  rescue LoadError
+    JSON_AVAILABLE = false
+    puts "[Online] Ruby 'json' library not available — falling back to " \
+         "partial parsing (moves/IVs/EVs will NOT survive trade or battle party sync)."
+  end
+
+  def self.parse_json_safe(raw)
+    return nil if raw.nil? || raw.empty?
+    return nil unless JSON_AVAILABLE
+    begin
+      JSON.parse(raw)
+    rescue => e
+      puts "[Online] JSON parse error: #{e.message}"
+      nil
+    end
+  end
+
   def self.parse_party_data(raw)
     return [] if raw.nil? || raw.empty?
-    # Extract array of pokemon hashes from raw JSON string
+    parsed = parse_json_safe(raw)
+    return parsed if parsed.is_a?(Array)
+
+    # Fallback: old flat-field regex parser. NOTE: this loses ivs/evs/moves/
+    # ribbons/ability_index — only used if JSON_AVAILABLE is false.
     results = []
     raw.scan(/\{[^{}]*\}/).each do |obj|
       hash = {}
@@ -773,9 +815,14 @@ module Online
 
   def self.parse_pokemon_data(raw)
     return nil if raw.nil? || raw.empty?
+    parsed = parse_json_safe(raw)
+    return parsed if parsed.is_a?(Hash)
+
+    # Fallback: old flat-field regex parser (see note above).
     hash = {}
     ["species", "level", "name", "gender", "shiny", "ability", "nature",
-     "item", "happiness", "hp", "poke_ball", "exp"].each do |field|
+     "item", "happiness", "hp", "poke_ball", "exp",
+     "original_trainer", "original_trainer_id"].each do |field|
       val = raw[/"#{field}"\s*:\s*"([^"]*)"/, 1] ||
             raw[/"#{field}"\s*:\s*([0-9\.\-]+)/, 1] ||
             raw[/"#{field}"\s*:\s*(true|false)/, 1]

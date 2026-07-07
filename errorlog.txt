@@ -719,3 +719,67 @@ Section008:616:in `each'
 Section008:616:in `runPlugins'
 Section412:28:in `mainFunctionDebug'
 Section412:18:in `block in mainFunction'
+
+=================
+
+[2026-07-06 22:20:54 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Error in Plugin: [User Interface Enhancement]
+Exception: NameError
+Message: undefined method `pbDisplay' for class `Battle::Battle'
+
+Backtrace:
+[User Interface Enhancement] [000_6]Battle.rb:151:in `<class:Battle>'
+[User Interface Enhancement] [000_6]Battle.rb:150:in `<main>'
+Section008:635:in `eval'
+Section008:635:in `block (2 levels) in runPlugins'
+Section008:625:in `each'
+Section008:625:in `block in runPlugins'
+Section008:616:in `each'
+Section008:616:in `runPlugins'
+Section412:28:in `mainFunctionDebug'
+Section412:18:in `block in mainFunction'
+
+=================
+
+[2026-07-06 23:09:41 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Exception: NoMethodError
+Message: undefined method `pokerus_status=' for #<Pokemon KADABRA Lv.>
+
+Backtrace:
+[User Interface Enhancement] [000_5]Trade.rb:150:in `hash_to_pokemon'
+[User Interface Enhancement] [000_5]Trade.rb:399:in `execute_trade'
+[User Interface Enhancement] [000_4]Multiplayer.rb:696:in `block (2 levels) in wait_for_trade_confirm'
+[User Interface Enhancement] [000_4]Multiplayer.rb:691:in `each'
+[User Interface Enhancement] [000_4]Multiplayer.rb:691:in `block in wait_for_trade_confirm'
+[User Interface Enhancement] [000_4]Multiplayer.rb:687:in `loop'
+[User Interface Enhancement] [000_4]Multiplayer.rb:687:in `wait_for_trade_confirm'
+[User Interface Enhancement] [000_4]Multiplayer.rb:665:in `block in wait_for_trade_party'
+[User Interface Enhancement] [000_4]Multiplayer.rb:640:in `loop'
+[User Interface Enhancement] [000_4]Multiplayer.rb:640:in `wait_for_trade_party'
+
+=================
+
+[2026-07-06 23:41:14 +0100]
+[Pokémon Essentials version 21.1]
+[v21.1 Hotfixes 1.0.9]
+
+Exception: ArgumentError
+Message: wrong number of arguments (given 5, expected 0)
+
+Backtrace:
+[User Interface Enhancement] [000_6]Battle.rb:394:in `initialize'
+[User Interface Enhancement] [000_6]Battle.rb:394:in `new'
+[User Interface Enhancement] [000_6]Battle.rb:394:in `run_online_host_battle'
+[User Interface Enhancement] [000_6]Battle.rb:357:in `initiate_battle'
+[User Interface Enhancement] [000_4]Multiplayer.rb:590:in `open_player_interaction_menu'
+[User Interface Enhancement] [000_4]Multiplayer.rb:578:in `block in check_online_player_interaction'
+[User Interface Enhancement] [000_4]Multiplayer.rb:574:in `each'
+[User Interface Enhancement] [000_4]Multiplayer.rb:574:in `check_online_player_interaction'
+[User Interface Enhancement] [000_4]Multiplayer.rb:559:in `update'
+[BW Speech Bubble] BW Speech Bubble.rb:564:in `update'

@@ -28,10 +28,10 @@ module Online
       "name"          => pkmn.name,
       "gender"        => pkmn.gender,
       "shiny"         => pkmn.shiny?,
-      "ability"       => pkmn.ability.to_s,
+      "ability"       => safe_data_id(pkmn.ability),
       "ability_index" => pkmn.ability_index,
-      "nature"        => pkmn.nature.to_s,
-      "item"          => pkmn.item.to_s,
+      "nature"        => safe_data_id(pkmn.nature),
+      "item"          => safe_data_id(pkmn.item),
       "moves"         => moves.compact,
       "hp"            => pkmn.hp,
       "totalhp"       => pkmn.totalhp,
@@ -52,7 +52,7 @@ module Online
         "spe" => pkmn.ev[:SPEED]
       },
       "happiness"           => (pkmn.happiness rescue 70),
-      "poke_ball"           => (pkmn.poke_ball.to_s rescue "POKEBALL"),
+      "poke_ball"           => (safe_data_id(pkmn.poke_ball).empty? ? "POKEBALL" : safe_data_id(pkmn.poke_ball)),
       "original_trainer"    => (pkmn.owner&.name rescue $player.name) || $player.name,
       "original_trainer_id" => (pkmn.owner&.id rescue $player.id) || $player.id,
       "exp"                 => (pkmn.exp rescue 0),
@@ -71,89 +71,141 @@ module Online
     pkmn.exp   = hash["exp"].to_i if hash["exp"]
 
     # Gender
-    pkmn.gender = hash["gender"].to_i
+    begin
+      pkmn.gender = hash["gender"].to_i
+    rescue => e
+      puts "[Trade] gender restore skipped: #{e.message}"
+    end
 
     # Shiny
-    pkmn.shiny = true if hash["shiny"] == "true" || hash["shiny"] == true
+    begin
+      pkmn.shiny = true if hash["shiny"] == "true" || hash["shiny"] == true
+    rescue => e
+      puts "[Trade] shiny restore skipped: #{e.message}"
+    end
 
     # Nature
-    if hash["nature"]
-      nature = hash["nature"].to_sym rescue nil
-      pkmn.nature = nature if nature && GameData::Nature.exists?(nature)
+    begin
+      if hash["nature"]
+        nature = hash["nature"].to_sym rescue nil
+        pkmn.nature = nature if nature && GameData::Nature.exists?(nature)
+      end
+    rescue => e
+      puts "[Trade] nature restore skipped: #{e.message}"
     end
 
     # Ability
-    if hash["ability"]
-      ability = hash["ability"].to_sym rescue nil
-      if ability && GameData::Ability.exists?(ability)
-        pkmn.ability      = ability
-        pkmn.ability_index = hash["ability_index"].to_i
+    begin
+      if hash["ability"]
+        ability = hash["ability"].to_sym rescue nil
+        if ability && GameData::Ability.exists?(ability)
+          pkmn.ability      = ability
+          pkmn.ability_index = hash["ability_index"].to_i
+        end
       end
+    rescue => e
+      puts "[Trade] ability restore skipped: #{e.message}"
     end
 
     # Item
-    if hash["item"] && !hash["item"].empty? && hash["item"] != "nil"
-      item = hash["item"].to_sym rescue nil
-      pkmn.item = item if item && GameData::Item.exists?(item)
+    begin
+      if hash["item"] && !hash["item"].empty? && hash["item"] != "nil"
+        item = hash["item"].to_sym rescue nil
+        pkmn.item = item if item && GameData::Item.exists?(item)
+      end
+    rescue => e
+      puts "[Trade] item restore skipped: #{e.message}"
     end
 
     # IVs
-    if hash["ivs"]
-      ivs = hash["ivs"]
-      pkmn.iv[:HP]              = ivs["hp"].to_i
-      pkmn.iv[:ATTACK]          = ivs["atk"].to_i
-      pkmn.iv[:DEFENSE]         = ivs["def"].to_i
-      pkmn.iv[:SPECIAL_ATTACK]  = ivs["spa"].to_i
-      pkmn.iv[:SPECIAL_DEFENSE] = ivs["spd"].to_i
-      pkmn.iv[:SPEED]           = ivs["spe"].to_i
+    begin
+      if hash["ivs"]
+        ivs = hash["ivs"]
+        pkmn.iv[:HP]              = ivs["hp"].to_i
+        pkmn.iv[:ATTACK]          = ivs["atk"].to_i
+        pkmn.iv[:DEFENSE]         = ivs["def"].to_i
+        pkmn.iv[:SPECIAL_ATTACK]  = ivs["spa"].to_i
+        pkmn.iv[:SPECIAL_DEFENSE] = ivs["spd"].to_i
+        pkmn.iv[:SPEED]           = ivs["spe"].to_i
+      end
+    rescue => e
+      puts "[Trade] IV restore skipped: #{e.message}"
     end
 
     # EVs
-    if hash["evs"]
-      evs = hash["evs"]
-      pkmn.ev[:HP]              = evs["hp"].to_i
-      pkmn.ev[:ATTACK]          = evs["atk"].to_i
-      pkmn.ev[:DEFENSE]         = evs["def"].to_i
-      pkmn.ev[:SPECIAL_ATTACK]  = evs["spa"].to_i
-      pkmn.ev[:SPECIAL_DEFENSE] = evs["spd"].to_i
-      pkmn.ev[:SPEED]           = evs["spe"].to_i
+    begin
+      if hash["evs"]
+        evs = hash["evs"]
+        pkmn.ev[:HP]              = evs["hp"].to_i
+        pkmn.ev[:ATTACK]          = evs["atk"].to_i
+        pkmn.ev[:DEFENSE]         = evs["def"].to_i
+        pkmn.ev[:SPECIAL_ATTACK]  = evs["spa"].to_i
+        pkmn.ev[:SPECIAL_DEFENSE] = evs["spd"].to_i
+        pkmn.ev[:SPEED]           = evs["spe"].to_i
+      end
+    rescue => e
+      puts "[Trade] EV restore skipped: #{e.message}"
     end
 
     # Moves
-    if hash["moves"] && hash["moves"].is_a?(Array)
-      pkmn.forget_all_moves
-      hash["moves"].each do |m|
-        next unless m && m["id"]
-        move_id = m["id"].to_sym rescue nil
-        next unless move_id && GameData::Move.exists?(move_id)
-        pkmn.learn_move(move_id)
-        # Restore PP
-        pkmn.moves.each do |pm|
-          if pm.id == move_id
-            pm.pp   = m["pp"].to_i
-            pm.ppup = m["ppup"].to_i
+    begin
+      if hash["moves"] && hash["moves"].is_a?(Array)
+        pkmn.forget_all_moves
+        hash["moves"].each do |m|
+          next unless m && m["id"]
+          move_id = m["id"].to_sym rescue nil
+          next unless move_id && GameData::Move.exists?(move_id)
+          pkmn.learn_move(move_id)
+          # Restore PP
+          pkmn.moves.each do |pm|
+            if pm.id == move_id
+              pm.pp   = m["pp"].to_i
+              pm.ppup = m["ppup"].to_i
+            end
           end
         end
       end
+    rescue => e
+      puts "[Trade] moves restore skipped: #{e.message}"
     end
 
     # Happiness
-    pkmn.happiness = hash["happiness"].to_i if hash["happiness"]
-
-    # Poké Ball
-    if hash["poke_ball"] && !hash["poke_ball"].empty?
-      ball = hash["poke_ball"].to_sym rescue nil
-      pkmn.poke_ball = ball if ball && GameData::Item.exists?(ball)
+    begin
+      pkmn.happiness = hash["happiness"].to_i if hash["happiness"]
+    rescue => e
+      puts "[Trade] happiness restore skipped: #{e.message}"
     end
 
-    # Pokerus
-    pkmn.pokerus_status = hash["pokerus_status"].to_i if hash["pokerus_status"]
+    # Poké Ball
+    begin
+      if hash["poke_ball"] && !hash["poke_ball"].empty?
+        ball = hash["poke_ball"].to_sym rescue nil
+        pkmn.poke_ball = ball if ball && GameData::Item.exists?(ball)
+      end
+    rescue => e
+      puts "[Trade] poke_ball restore skipped: #{e.message}"
+    end
 
-    # Ribbons
+    # Pokerus — guarded: some forks expose this differently (or not at all
+    # as a plain setter), and it's cosmetic, not essential to a valid trade.
+    if hash["pokerus_status"]
+      begin
+        pkmn.pokerus_status = hash["pokerus_status"].to_i if pkmn.respond_to?(:pokerus_status=)
+      rescue => e
+        puts "[Trade] pokerus_status restore skipped: #{e.message}"
+      end
+    end
+
+    # Ribbons — same reasoning, guarded per-ribbon so one bad ribbon symbol
+    # doesn't lose the rest.
     if hash["ribbons"] && hash["ribbons"].is_a?(Array)
       hash["ribbons"].each do |r|
-        ribbon = r.to_sym rescue nil
-        pkmn.give_ribbon(ribbon) if ribbon && GameData::Ribbon.exists?(ribbon)
+        begin
+          ribbon = r.to_sym rescue nil
+          pkmn.give_ribbon(ribbon) if ribbon && GameData::Ribbon.exists?(ribbon)
+        rescue => e
+          puts "[Trade] ribbon restore skipped (#{r}): #{e.message}"
+        end
       end
     end
 
@@ -166,6 +218,22 @@ module Online
     ) rescue nil
 
     pkmn.calc_stats
+
+    # Restore actual current HP — without this, every Pokemon reconstructed
+    # from network data starts at full HP regardless of its real state,
+    # which is an instant desync source for battles (and just wrong for
+    # trades: a traded-away injured Pokemon should stay injured).
+    if hash["hp"]
+      begin
+        hp = hash["hp"].to_i
+        hp = 0 if hp < 0
+        hp = pkmn.totalhp if hp > pkmn.totalhp
+        pkmn.hp = hp
+      rescue => e
+        puts "[Trade] hp restore skipped: #{e.message}"
+      end
+    end
+
     pkmn
   end
 
@@ -178,7 +246,7 @@ module Online
       "name"    => pkmn.name,
       "gender"  => pkmn.gender,
       "shiny"   => pkmn.shiny?,
-      "item"    => (pkmn.item.to_s rescue "")
+      "item"    => safe_data_id(pkmn.item)
     }
   end
 
@@ -462,13 +530,110 @@ module Online
   end
 end
 
+module WSClient
+  # Overrides WebSocket.rb's send_json. Online.build_json has a hard ~4096
+  # byte truncation somewhere in its implementation — fine for small payloads
+  # (position updates, short chat messages) but silently corrupts anything
+  # bigger, like a full 6-Pokemon party. Since we already know 'json' is
+  # available in this build (confirmed by JSON_AVAILABLE working for parsing),
+  # use the real encoder here too instead of chasing the custom one's bug.
+  def self.send_json(hash)
+    return unless connected?
+    begin
+      payload = Online::JSON_AVAILABLE ? JSON.generate(hash) : Online.build_json(hash)
+      @ssl.write(encode_frame(payload))
+    rescue => e
+      puts "[WS] Send error: #{e.message}"
+      @connected = false
+    end
+  end
+end
+
+module Online
+  # Safely extract a usable id/name from a field that might be a plain
+  # symbol/string OR a GameData object (GameData::Ability, GameData::Nature,
+  # GameData::Item, etc. all respond to .id in this version) — calling .to_s
+  # directly on the object dumps "#<GameData::Ability:0x...>" instead of the
+  # actual name, which bloats the payload AND silently fails to round-trip
+  # (the receiving end's GameData::X.exists?(garbage_symbol) always fails).
+  def self.safe_data_id(obj)
+    return "" if obj.nil?
+    return obj.id.to_s if obj.respond_to?(:id)
+    obj.to_s
+  end
+end
+
 #==============================================================================#
 # Update WebSocket message handler to handle trade packets
 #==============================================================================#
 module WSClient
+  # Overrides the version in WebSocket.rb — that one only matched quoted
+  # strings and numbers, never boolean literals (true/false), so every
+  # boolean field parsed anywhere in this system (shiny, fainted, relayed,
+  # etc.) was silently always coming back nil. Trade.rb loads after
+  # WebSocket.rb, so this redefinition takes over cleanly.
+  def self.extract_field(str, key)
+    str[/"#{Regexp.escape(key)}"\s*:\s*"([^"]*)"/, 1] ||
+    str[/"#{Regexp.escape(key)}"\s*:\s*([0-9\.\-]+)/, 1] ||
+    str[/"#{Regexp.escape(key)}"\s*:\s*(true|false)/, 1]
+  end
+end
+
+module WSClient
+  # The old "party_data"/"pokemon_data"/"selection" extraction used a
+  # non-greedy regex (\{.*?\}) which stops at the FIRST closing brace it
+  # finds — but a Pokemon's ivs/evs/moves are nested objects/arrays, so that
+  # regex was truncating the payload before it ever reached a JSON parser.
+  # This does a real balanced brace/bracket scan instead, correctly skipping
+  # over braces that appear inside quoted strings.
+  def self.extract_balanced(str, key)
+    m = str.match(/"#{Regexp.escape(key)}"\s*:\s*([\{\[])/)
+    return nil unless m
+    open_char  = m[1]
+    close_char = (open_char == "{") ? "}" : "]"
+    start_idx  = m.end(1) - 1
+    depth      = 0
+    in_string  = false
+    escape     = false
+    idx        = start_idx
+    while idx < str.length
+      ch = str[idx]
+      if in_string
+        if escape
+          escape = false
+        elsif ch == '\\'
+          escape = true
+        elsif ch == '"'
+          in_string = false
+        end
+      else
+        if ch == '"'
+          in_string = true
+        elsif ch == open_char
+          depth += 1
+        elsif ch == close_char
+          depth -= 1
+          if depth == 0
+            return str[start_idx..idx]
+          end
+        end
+      end
+      idx += 1
+    end
+    nil
+  end
+
   def self.quick_parse(str)
     action = extract_field(str, "action")
     return nil unless action
+
+    if action == "battle_party" || action == "trade_party"
+      snippet_head = str[0, 300]
+      snippet_tail = str.length > 600 ? str[-300, 300] : ""
+      puts "[Battle] RAW #{action} message: total_len=#{str.length}"
+      puts "[Battle] RAW head: #{snippet_head}"
+      puts "[Battle] RAW tail: #{snippet_tail}" unless snippet_tail.empty?
+    end
     {
       "action"         => action,
       "trainer_id"     => extract_field(str, "trainer_id"),
@@ -488,10 +653,31 @@ module WSClient
       "opacity"        => extract_field(str, "opacity"),
       "character"      => extract_field(str, "character"),
       "trade_id"       => extract_field(str, "trade_id"),
-      "party_data"     => str[/"party_data"\s*:\s*(\[.*?\])/m, 1],
-      "pokemon_data"   => str[/"pokemon_data"\s*:\s*(\{.*?\})/m, 1],
-      "selection"      => str[/"selection"\s*:\s*(\{.*?\})/m, 1],
-      "my_index"       => extract_field(str, "my_index")
+      "party_data"     => extract_balanced(str, "party_data"),
+      "pokemon_data"   => extract_balanced(str, "pokemon_data"),
+      "selection"      => extract_balanced(str, "selection"),
+      "my_index"       => extract_field(str, "my_index"),
+      "battle_id"      => extract_field(str, "battle_id"),
+      "request_id"     => extract_field(str, "request_id"),
+      "idx_battler"    => extract_field(str, "idx_battler"),
+      "kind"           => extract_field(str, "kind"),
+      "move_index"     => extract_field(str, "move_index"),
+      "target_index"   => extract_field(str, "target_index"),
+      "party_index"    => extract_field(str, "party_index"),
+      "command_data"   => extract_balanced(str, "command_data"),
+      "battle_state"   => extract_balanced(str, "battle_state"),
+      "log"            => extract_balanced(str, "log"),
+      "winner"         => extract_field(str, "winner"),
+      "original_action" => extract_field(str, "original_action"),
+      "relayed"         => extract_field(str, "relayed"),
+      "recipients"      => extract_field(str, "recipients"),
+      "seed"            => extract_field(str, "seed"),
+      "round"           => extract_field(str, "round"),
+      "choice_type"     => extract_field(str, "choice_type"),
+      "choice_index"    => extract_field(str, "choice_index"),
+      "choice_target"   => extract_field(str, "choice_target"),
+      "my_hp"           => extract_field(str, "my_hp"),
+      "my_fainted"      => extract_field(str, "my_fainted")
     }
   end
 end

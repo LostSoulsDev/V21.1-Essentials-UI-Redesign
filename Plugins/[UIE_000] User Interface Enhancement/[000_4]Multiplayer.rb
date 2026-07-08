@@ -17,6 +17,81 @@ module Online
     !@current_session.nil?
   end
 
+  def self.hosting_session?
+    @is_session_host == true
+  end
+
+  #=============================================================================
+  # Opt-in toggle — every single online feature (session browsing/hosting,
+  # trades, battles, messaging, presence/online-count) is gated behind this.
+  # Off by default; nothing online-related runs at all until a player
+  # explicitly enables it from the Settings menu.
+  #=============================================================================
+  def self.features_enabled?
+    return false unless $game_system
+    $game_system.online_features_enabled == true
+  end
+
+  # Call this from the Settings menu when the player toggles the option ON.
+  def self.enable_online_features!
+    return if features_enabled?
+    $game_system.online_features_enabled = true if $game_system
+    ws_connect_presence
+    puts "[Online] Online features enabled"
+  end
+
+  # Call this from the Settings menu when the player toggles the option OFF.
+  def self.disable_online_features!
+    return unless features_enabled?
+    leave_session if in_session?
+    $game_system.online_features_enabled = false if $game_system
+    ws_disconnect
+    OnlinePlayers.clear
+    @online_count = 0
+    puts "[Online] Online features disabled"
+  end
+
+  #=============================================================================
+  # Presence — connects once, independent of being in any session, so the
+  # server can track "who currently has online features enabled" separately
+  # from session membership (needed for the online-player-count UI, and
+  # later for live DM delivery to someone who isn't in a session).
+  # host_session/join_session reuse this SAME connection — WSClient.connect
+  # is a no-op if already connected — rather than opening a second socket.
+  #=============================================================================
+  def self.ws_connect_presence
+    return unless $player
+    WSClient.connect
+    return unless WSClient.connected?
+    WSClient.send_json({
+      "action"     => "presence_join",
+      "trainer_id" => $player.id.to_s
+    })
+    puts "[Online] Presence connected as #{$player.id}"
+  end
+
+  def self.online_count
+    @online_count || 0
+  end
+
+  def self.set_online_count(n)
+    @online_count = n
+  end
+
+  # Overrides the version in WebSocket.rb — session join now reuses whatever
+  # connection ws_connect_presence already opened, and uses the clearer
+  # "session_join" action name (server still accepts the old "join" too).
+  def self.ws_connect(session_code, trainer_id)
+    WSClient.connect
+    return unless WSClient.connected?
+    WSClient.send_json({
+      "action"       => "session_join",
+      "session_code" => session_code,
+      "trainer_id"   => trainer_id.to_s
+    })
+    puts "[Online] Joined session #{session_code}"
+  end
+
   def self.generate_session_code
     chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
     code  = ""
@@ -26,6 +101,10 @@ module Online
 
   def self.host_session(description: "", visibility: "public", max_players: 8)
     return unless $player
+    unless features_enabled?
+      puts "[Online] host_session refused — online features are disabled"
+      return nil
+    end
     code = generate_session_code
     Online.post("sessions", body: {
       "session_code"  => code,
@@ -39,6 +118,7 @@ module Online
       "player_names"  => $player.name
     })
     @current_session = code
+    @is_session_host = true
     Online.ws_connect(code, $player.id)
     puts "[Online] Hosting session #{code}"
     code
@@ -46,6 +126,10 @@ module Online
 
   def self.join_session(code)
     return unless $player
+    unless features_enabled?
+      puts "[Online] join_session refused — online features are disabled"
+      return false
+    end
     raw = Online.get("sessions", params: { "session_code" => "eq.#{code}" })
     if raw.nil? || !raw.include?(code)
       return false
@@ -64,6 +148,7 @@ module Online
       }, params: { "session_code" => "eq.#{code}" })
     end
     @current_session = code
+    @is_session_host = false
     Online.ws_connect(code, $player.id)
     puts "[Online] Joined session #{code}"
     true
@@ -95,10 +180,33 @@ module Online
     OnlinePlayers.clear
     puts "[Online] Left session #{@current_session}"
     @current_session = nil
+    @is_session_host = false
+  end
+
+  # Safety net alongside the relay's immediate cleanup (which fires the
+  # instant a session's last connected socket disconnects): catches sessions
+  # orphaned by a scenario the relay can't see on its own, e.g. it being
+  # restarted/redeployed and losing its in-memory session state entirely.
+  # Deactivates anything marked active that hasn't had a heartbeat in a
+  # while. Requires an `updated_at` timestamp column on the sessions table,
+  # bumped periodically by the host (see the heartbeat timer in
+  # Game_Player#update below) — add the column if it doesn't already exist:
+  #   alter table sessions add column if not exists updated_at timestamptz default now();
+  STALE_SESSION_MINUTES = 10
+
+  def self.cleanup_stale_sessions
+    cutoff = (Time.now.utc - (STALE_SESSION_MINUTES * 60)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    Online.patch("sessions", body: { "active" => false }, params: {
+      "active"     => "eq.true",
+      "updated_at" => "lt.#{cutoff}"
+    })
+  rescue
+    nil
   end
 
   # Fetch public sessions for the browser
   def self.fetch_public_sessions
+    cleanup_stale_sessions
     raw = Online.get("sessions", params: {
       "active"     => "eq.true",
       "visibility" => "eq.public",
@@ -110,6 +218,7 @@ module Online
 
   # Fetch sessions hosted by friends
   def self.fetch_friend_sessions
+    cleanup_stale_sessions
     friends = fetch_friends
     return [] if friends.empty?
     friend_names = friends.map { |f| f["friend_name"] }
@@ -234,6 +343,22 @@ end
 #==============================================================================#
 # Patch Game_Character to add writers — same as VMS plugin does
 #==============================================================================#
+#==============================================================================#
+# Persist the online-features opt-in toggle in the save file. Game_System is
+# guaranteed to exist and be saved regardless of which Settings menu
+# framework this project uses — hook whatever UI toggle you build into
+# Online.enable_online_features!/disable_online_features! above.
+#==============================================================================#
+class Game_System
+  attr_accessor :online_features_enabled
+
+  alias online_system_initialize initialize
+  def initialize
+    online_system_initialize
+    @online_features_enabled = false if @online_features_enabled.nil?
+  end
+end
+
 class Game_Character
   def x=(val);              @x              = val; end
   def y=(val);              @y              = val; end
@@ -462,10 +587,25 @@ class Game_Player
   alias online_player_update update
   def update
     online_player_update
-    return unless Online.in_session?
+    return unless Online.features_enabled?
 
-    # Poll WebSocket ONCE per frame and route messages by action
+    # Poll WebSocket ONCE per frame and route messages by action. This runs
+    # whenever online features are on at all — NOT just while in a session —
+    # so presence_update (online player count) and future live-DM delivery
+    # keep working while just wandering the overworld solo.
     messages = Online.ws_poll
+
+    messages.each do |msg|
+      next unless msg
+      case msg["action"]
+      when "presence_update"
+        Online.set_online_count(msg["online_count"].to_i)
+      when "presence_joined"
+        Online.set_online_count(msg["online_count"].to_i)
+      end
+    end
+
+    return unless Online.in_session?
 
     position_messages = []
     messages.each do |msg|
@@ -486,6 +626,8 @@ class Game_Player
         OnlinePlayers.set_pending_trade(msg)
       when "server_ack"
         puts "[Server ACK] original_action=#{msg["original_action"] || msg["action"]} relayed=#{msg["relayed"]} raw=#{msg.inspect}"
+      when "presence_update", "presence_joined"
+        # already handled above
       else
         puts "[Online] Unhandled WS action arrived: #{msg["action"].inspect}"
       end
@@ -502,6 +644,20 @@ class Game_Player
       if @online_broadcast_timer >= 60
         @online_broadcast_timer = 0
         broadcast_state
+      end
+    end
+
+    # Session heartbeat — only the host needs to bump this, since it's just
+    # keeping the Supabase row's updated_at fresh for cleanup_stale_sessions
+    # to check against. Every ~2 minutes is plenty; this is a cheap Supabase
+    # write, not something that needs frame-rate precision.
+    if Online.hosting_session?
+      @online_heartbeat_timer = (@online_heartbeat_timer || 0) + 1
+      if @online_heartbeat_timer >= 7200  # ~2 minutes at 60fps
+        @online_heartbeat_timer = 0
+        Online.patch("sessions", body: {
+          "updated_at" => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+        }, params: { "session_code" => "eq.#{Online.current_session}" }) rescue nil
       end
     end
 

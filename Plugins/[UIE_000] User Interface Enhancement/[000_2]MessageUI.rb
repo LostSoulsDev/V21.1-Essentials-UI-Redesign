@@ -17,7 +17,23 @@ module Online
   #=============================================================================
   # Main online menu
   #=============================================================================
+  # Gated at the top: if online features are off, this is the ONLY thing you
+  # can do from here — turn them on. Nothing else in this file (messages,
+  # friends, sessions, "who's online") is reachable at all unless the menu
+  # below it actually gets built, so gating happens exactly once, here.
+  #=============================================================================
   def self.open_menu
+    unless Online.features_enabled?
+      commands = ["Enable Online Features", "Close"]
+      choice   = pbShowCommands(nil, commands, 1)
+      if choice == 0
+        pbMessage("Enabling online features...")
+        Online.enable_online_features!
+        pbMessage("Online features enabled!")
+      end
+      return
+    end
+
     # Fetch unread count once on open, not every loop iteration
     $online_blocking = true
     all_messages = fetch_messages
@@ -27,8 +43,9 @@ module Online
     loop do
       inbox_label   = unread > 0 ? "Messages (#{unread} new)" : "Messages"
       session_label = in_session? ? "Session (#{current_session})" : "Sessions"
-      commands = [inbox_label, "New Message", "Who's Online", "Friends", session_label, "Close"]
-      choice   = pbShowCommands(nil, commands, 5)
+      commands = [inbox_label, "New Message", "Who's Online (#{Online.online_count})",
+                  "Friends", session_label, "Disable Online Features", "Close"]
+      choice   = pbShowCommands(nil, commands, commands.length - 1)
 
       case choice
       when 0
@@ -41,6 +58,12 @@ module Online
       when 2 then show_online_trainers
       when 3 then Online.open_friends_menu
       when 4 then Online.open_session_menu
+      when 5
+        if pbConfirmMessage("Disable online features? This will leave any active session.")
+          Online.disable_online_features!
+          pbMessage("Online features disabled.")
+          return
+        end
       else return
       end
     end
@@ -360,6 +383,10 @@ module Online
     size_choice = pbShowCommands(nil, ["2 players", "4 players", "8 players"], 2)
     max_players = [2, 4, 8][size_choice] || 8
     code = Online.host_session(description: desc, visibility: visibility, max_players: max_players)
+    if code.nil?
+      pbMessage("Couldn't create a session — make sure online features are enabled.")
+      return
+    end
     pbMessage("Session created!\nCode: \b#{code}\b\n#{visibility == "public" ? "Listed publicly." : "Friends only."}")
   end
 

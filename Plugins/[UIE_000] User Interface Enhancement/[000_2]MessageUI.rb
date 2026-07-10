@@ -44,7 +44,7 @@ module Online
       inbox_label   = unread > 0 ? "Messages (#{unread} new)" : "Messages"
       session_label = in_session? ? "Session (#{current_session})" : "Sessions"
       commands = [inbox_label, "New Message", "Who's Online (#{Online.online_count})",
-                  "Friends", session_label, "Disable Online Features", "Close"]
+                  "Friends", session_label, "Quick Match", "Disable Online Features", "Close"]
       choice   = pbShowCommands(nil, commands, commands.length - 1)
 
       case choice
@@ -58,7 +58,8 @@ module Online
       when 2 then show_online_trainers
       when 3 then Online.open_friends_menu
       when 4 then Online.open_session_menu
-      when 5
+      when 5 then Online.start_quick_match
+      when 6
         if pbConfirmMessage("Disable online features? This will leave any active session.")
           Online.disable_online_features!
           pbMessage("Online features disabled.")

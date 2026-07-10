@@ -1,9 +1,6 @@
 #==============================================================================#
 #                       Online System — Overworld Multiplayer                  #
 #==============================================================================#
-# Based on VMS plugin architecture — Player class stores state, Rf events     #
-# are driven by direct property assignment each frame.                        #
-#==============================================================================#
 
 module Online
   #=============================================================================
@@ -92,6 +89,23 @@ module Online
     puts "[Online] Joined session #{session_code}"
   end
 
+  # Removes you from a session's server-side message group WITHOUT closing
+  # the connection — the connection needs to stay open for presence (online
+  # count, future live-DM delivery) regardless of session membership.
+  # Previously leave_session/leave_matchmaking_session called ws_disconnect,
+  # which killed presence too; after leaving any session (or finishing a
+  # matchmaking battle), the next attempt to queue/browse/etc would silently
+  # do nothing since the socket was already closed.
+  def self.ws_leave_session(session_code, trainer_id)
+    return unless WSClient.connected?
+    WSClient.send_json({
+      "action"       => "session_leave",
+      "session_code" => session_code,
+      "trainer_id"   => trainer_id.to_s
+    })
+    puts "[Online] Left session #{session_code} (connection stays open)"
+  end
+
   def self.generate_session_code
     chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
     code  = ""
@@ -176,7 +190,7 @@ module Online
       "trainer_id"   => "eq.#{$player.id}",
       "session_code" => "eq.#{@current_session}"
     })
-    Online.ws_disconnect
+    Online.ws_leave_session(@current_session, $player.id)
     OnlinePlayers.clear
     puts "[Online] Left session #{@current_session}"
     @current_session = nil
@@ -622,7 +636,7 @@ class Game_Player
         handle_incoming_battle_challenge(msg) if msg["trainer_b_id"].to_i == $player.id
       when "battle_accepted", "battle_declined", "battle_cancel", "battle_party",
            "battle_start", "battle_log", "battle_command_request", "battle_action",
-           "battle_end", "battle_choice"
+           "battle_end", "battle_choice", "battle_forfeit"
         OnlinePlayers.set_pending_trade(msg)
       when "server_ack"
         puts "[Server ACK] original_action=#{msg["original_action"] || msg["action"]} relayed=#{msg["relayed"]} raw=#{msg.inspect}"
@@ -633,17 +647,23 @@ class Game_Player
       end
     end
 
-    # Update ghost positions
-    OnlinePlayers.update(position_messages) unless position_messages.empty?
+    # Update ghost positions — never during a matchmaking session, since the
+    # two matched players were never meant to see each other in the
+    # overworld, only in the battle itself.
+    unless Online.matchmaking_session?
+      OnlinePlayers.update(position_messages) unless position_messages.empty?
+    end
 
-    # Broadcast position
-    if moving?
-      broadcast_state
-    else
-      @online_broadcast_timer = (@online_broadcast_timer || 0) + 1
-      if @online_broadcast_timer >= 60
-        @online_broadcast_timer = 0
+    # Broadcast position — same suppression, and for the same reason.
+    unless Online.matchmaking_session?
+      if moving?
         broadcast_state
+      else
+        @online_broadcast_timer = (@online_broadcast_timer || 0) + 1
+        if @online_broadcast_timer >= 60
+          @online_broadcast_timer = 0
+          broadcast_state
+        end
       end
     end
 
@@ -651,7 +671,7 @@ class Game_Player
     # keeping the Supabase row's updated_at fresh for cleanup_stale_sessions
     # to check against. Every ~2 minutes is plenty; this is a cheap Supabase
     # write, not something that needs frame-rate precision.
-    if Online.hosting_session?
+    if Online.hosting_session? && !Online.matchmaking_session?
       @online_heartbeat_timer = (@online_heartbeat_timer || 0) + 1
       if @online_heartbeat_timer >= 7200  # ~2 minutes at 60fps
         @online_heartbeat_timer = 0

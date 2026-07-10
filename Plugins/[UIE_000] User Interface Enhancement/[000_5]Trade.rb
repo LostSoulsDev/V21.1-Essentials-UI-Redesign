@@ -678,7 +678,11 @@ module WSClient
       "choice_target"   => extract_field(str, "choice_target"),
       "my_hp"           => extract_field(str, "my_hp"),
       "my_fainted"      => extract_field(str, "my_fainted"),
-      "online_count"    => extract_field(str, "online_count")
+      "online_count"    => extract_field(str, "online_count"),
+      "matchmaking"     => extract_field(str, "matchmaking"),
+      "role"            => extract_field(str, "role"),
+      "opponent_id"     => extract_field(str, "opponent_id"),
+      "opponent_name"   => extract_field(str, "opponent_name")
     }
   end
 end

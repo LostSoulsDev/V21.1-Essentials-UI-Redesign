@@ -1,24 +1,6 @@
 #==============================================================================#
 #                  Online System — Custom UI (Hub Screen)                      #
 #==============================================================================#
-# This is a NEW, SEPARATE screen on top of the existing Online system. It
-# does NOT replace or modify Online.open_menu (the pbShowCommands version in
-# MessageUI.rb) — that stays fully intact and callable, including "Enable
-# Online Features", so every existing feature can still be tested while this
-# custom UI is built out incrementally, screen by screen.
-#
-# Graphics folder: Graphics/Custom UI/Online/
-#   grid.png     — 1600x480. Built as two identical 800px tiles side by side
-#                  (same technique as the pause menu's top/bottom grids) so
-#                  scrolling it left and wrapping at the halfway point (800px)
-#                  looks seamless.
-#   overlay.png  — 800x480, static, sits over the grid at (0,0).
-#
-# Any image file that doesn't exist yet falls back to a generated placeholder
-# (solid fill + filename label) instead of crashing — this screen is safe to
-# open and test with a completely empty Graphics/Custom UI/Online/ folder,
-# and will start using real art the moment matching filenames are dropped in.
-#==============================================================================#
 
 class OnlineHub_Scene
   UI_FOLDER = "Graphics/Custom UI/Online/"

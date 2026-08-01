@@ -1,0 +1,2 @@
+# TileFlags — Ground/Anchor/Face data, auto-generated.
+

@@ -1,0 +1,7 @@
+[23:28:45 Fri 31-Jul-2026] [ERROR] Image located at "Graphics/Battlebacks/Backdrops/IndoorA" was not found!
+[23:28:45 Fri 31-Jul-2026] [ERROR] Image located at "Graphics/Battlebacks/Components/decor007" was not found!
+[23:28:45 Fri 31-Jul-2026] [ERROR] Image located at "Graphics/Battlebacks/Components/decor008" was not found!
+[23:28:45 Fri 31-Jul-2026] [ERROR] Image located at "Graphics/Battlebacks/Components/lightA" was not found!
+[23:28:45 Fri 31-Jul-2026] [ERROR] Image located at "Graphics/Battlebacks/Components/lightA" was not found!
+[23:28:45 Fri 31-Jul-2026] [ERROR] Image located at "Graphics/Battlebacks/Components/lightA" was not found!
+[23:28:45 Fri 31-Jul-2026] [ERROR] Image located at "Graphics/Battlebacks/Components/lightA" was not found!

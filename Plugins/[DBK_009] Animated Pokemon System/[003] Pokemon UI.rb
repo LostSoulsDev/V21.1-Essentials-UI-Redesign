@@ -109,15 +109,9 @@ end
 #-------------------------------------------------------------------------------
 class PokemonStorageScene
   alias animated_pbUpdateOverlay pbUpdateOverlay
-  def pbUpdateOverlay(selection, party = nil)
-    pokemon = nil
-    if @screen.pbHeldPokemon
-      pokemon = @screen.pbHeldPokemon
-    elsif selection >= 0
-      pokemon = (party) ? party[selection] : @storage[@storage.currentBox, selection]
-    end
-    @sprites["pokemon"].pbSetDisplay([90, 134, 168]) if pokemon
-    animated_pbUpdateOverlay(selection, party)
+  def pbUpdateOverlay(*args)
+    @sprites["pokemon"].pbSetDisplay([90, 134, 168])
+    animated_pbUpdateOverlay(*args)
   end
 end
 
@@ -142,7 +136,7 @@ end
 # Used in calculating auto-positioning for sprites in various UI's.
 #-------------------------------------------------------------------------------
 def findCenter(bitmap)
-  return [0, 0] if !bitmap || bitmap.disposed?
+  return [0, 0] if !bitmap
   width = bitmap.width
   height = bitmap.height
   coords = []

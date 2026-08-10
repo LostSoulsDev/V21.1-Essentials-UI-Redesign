@@ -421,13 +421,13 @@ class PokemonPokedexInfo_Scene
     overlay = @sprites["overlay"].bitmap
     overlay.clear
 
-    @sprites["infosprite"].visible     = (page == 1)
-    @sprites["areamap"].visible        = (page == 2)
-    @sprites["areahighlight"].visible  = (page == 2)
-    @sprites["areaoverlay"].visible    = (page == 2)
-    @sprites["formfront"].visible      = (page == 3)
-    @sprites["formback"].visible       = (page == 3)
-    @sprites["formicon"].visible       = (page == 3)
+    @sprites["infosprite"].visible = (page == 1)
+    @sprites["areamap"].visible       = (page == 2) if @sprites["areamap"]
+    @sprites["areahighlight"].visible = (page == 2) if @sprites["areahighlight"]
+    @sprites["areaoverlay"].visible   = (page == 2) if @sprites["areaoverlay"]
+    @sprites["formfront"].visible     = (page == 3) if @sprites["formfront"]
+    @sprites["formback"].visible      = (page == 3) if @sprites["formback"]
+    @sprites["formicon"].visible      = (page == 3) if @sprites["formicon"]
 
     case page
     when 1

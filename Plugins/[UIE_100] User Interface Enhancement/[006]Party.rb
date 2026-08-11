@@ -296,11 +296,68 @@ class PokemonParty_Scene
   end
 
   #-----------------------------------------------------------------------------
+  # Special single-purpose entry modes, set by whichever screen invoked the
+  # party picker for a specific action (using a consumable item from the
+  # Bag, giving an item directly from the Bag, or teaching a TM/TR/HM).
+  # Bypasses the normal main command list entirely for that pass.
+  #-----------------------------------------------------------------------------
+  def pbSetUseItemMode(item)
+    @special_mode = :use_item
+    @special_item = item
+  end
+
+  def pbSetGiveItemMode(item)
+    @special_mode = :give_item
+    @special_item = item
+  end
+
+  def pbSetTeachMoveMode(move_id)
+    @special_mode = :teach_move
+    @special_move = move_id
+  end
+
+  #-----------------------------------------------------------------------------
+  # Battle-context mode for the party picker used mid-battle. battle_indices
+  # is the list of @party slot indices currently on the field, so the
+  # command list can tell an active battler apart from a benched Pokémon.
+  # battle_scene/idx_battler give access back to the battle for actions
+  # (Restore) that need to hand off to Battle::Scene#pbItemMenu.
+  #-----------------------------------------------------------------------------
+  def pbSetBattleMode(battle_indices, battle_scene = nil, idx_battler = nil)
+    @special_mode = :battle
+    @battle_indices = battle_indices || []
+    @battle_scene_ref = battle_scene
+    @battle_idx_battler = idx_battler
+  end
+
+  def pbClearSpecialMode
+    @special_mode = nil
+    @special_item = nil
+    @special_move = nil
+    @battle_indices = nil
+  end
+
+  #-----------------------------------------------------------------------------
   # Builds whichever command list matches @menu_mode, and bakes the matching
   # header text onto button_bg. Dispatches to the mode-specific builder.
   #-----------------------------------------------------------------------------
   def pbBuildCommandList
     @menu_mode ||= :main
+    if @special_mode
+      case @special_mode
+      when :use_item
+        pbBuildUseItemCommandList
+      when :give_item
+        pbBuildGiveItemCommandList
+      when :teach_move
+        pbBuildTeachMoveCommandList
+      when :battle
+        pbBuildBattleCommandList
+      end
+      @cmdindex  = 0
+      @cmdscroll = 0
+      return
+    end
     case @menu_mode
     when :item
       pbBuildItemCommandList
@@ -312,6 +369,89 @@ class PokemonParty_Scene
     @cmdindex  = 0
     @cmdscroll = 0
     pbDrawButtonBgHeader
+  end
+
+  #-----------------------------------------------------------------------------
+  # Use item (consumable, from the Bag) — Use / Cancel.
+  # "Use ItemName?" header.
+  #-----------------------------------------------------------------------------
+  def pbBuildUseItemCommandList
+    @command_list = [_INTL("Use"), _INTL("Cancel")]
+    @command_data = [:special_use, :special_cancel]
+    itemname = @special_item ? GameData::Item.get(@special_item).name : ""
+    pbDrawButtonBgHeaderText(_INTL("Use {1}?", itemname))
+  end
+
+  #-----------------------------------------------------------------------------
+  # Give item (directly from the Bag) — Give / Cancel.
+  # "Give X ItemName?" header.
+  #-----------------------------------------------------------------------------
+  def pbBuildGiveItemCommandList
+    pkmn = @party[@activecmd]
+    name = pkmn ? pkmn.name : ""
+    itemname = @special_item ? GameData::Item.get(@special_item).name : ""
+
+    if pkmn && pkmn.hasItem?
+      holding_name = GameData::Item.get(pkmn.item).name
+      @command_list = [_INTL("Swap"), _INTL("Cancel")]
+      @command_data = [:special_give, :special_cancel]
+      pbDrawButtonBgHeaderText(_INTL("Holding {1}", holding_name))
+    else
+      @command_list = [_INTL("Give"), _INTL("Cancel")]
+      @command_data = [:special_give, :special_cancel]
+      pbDrawButtonBgHeaderText(_INTL("Give {1} {2}?", name, itemname))
+    end
+  end
+
+  #-----------------------------------------------------------------------------
+  # Teach move (TM/TR/HM, from the Bag) — Learn / Cancel if the selected
+  # Pokémon can learn it, just Cancel otherwise.
+  # "Teach MoveName?" / "Can't learn MoveName" header.
+  #-----------------------------------------------------------------------------
+  def pbBuildTeachMoveCommandList
+    pkmn = @party[@activecmd]
+    move_data = @special_move ? GameData::Move.get(@special_move) : nil
+    movename  = move_data ? move_data.name : ""
+    can_learn = pkmn && move_data && !pkmn.egg? &&
+                pkmn.compatible_with_move?(@special_move) && !pkmn.hasMove?(@special_move)
+    if can_learn
+      @command_list = [_INTL("Learn"), _INTL("Cancel")]
+      @command_data = [:special_learn, :special_cancel]
+      pbDrawButtonBgHeaderText(_INTL("Teach {1}?", movename))
+    else
+      @command_list = [_INTL("Cancel")]
+      @command_data = [:special_cancel]
+      pbDrawButtonBgHeaderText(_INTL("Can't learn {1}", movename))
+    end
+  end
+
+  #-----------------------------------------------------------------------------
+  # Temporary battle-context list — Switch/Restore/Summary/Check Moves/
+  # Cancel for a benched Pokémon, or Restore/Summary/Check Moves/Cancel
+  # for whichever Pokémon is currently on the field. "Do what with X?"
+  # header, matching the normal field menu's phrasing.
+  #-----------------------------------------------------------------------------
+  def pbBuildBattleCommandList
+    pkmn = @party[@activecmd]
+    in_battle = @battle_indices && @battle_indices.include?(@activecmd)
+
+    @command_list = []
+    @command_data = []
+    if !in_battle
+      @command_list.push(_INTL("Switch"))
+      @command_data.push(:special_battle_switch)
+    end
+    @command_list.push(_INTL("Restore"))
+    @command_data.push(:special_battle_restore)
+    @command_list.push(_INTL("Summary"))
+    @command_data.push(:special_battle_summary)
+    @command_list.push(_INTL("Check Moves"))
+    @command_data.push(:special_battle_moves)
+    @command_list.push(_INTL("Cancel"))
+    @command_data.push(:special_cancel)
+
+    name = pkmn ? pkmn.name : ""
+    pbDrawButtonBgHeaderText(_INTL("Do what with {1}?", name))
   end
 
   #-----------------------------------------------------------------------------
@@ -793,6 +933,8 @@ class PokemonParty_Scene
   def pbEndScene
     return if @scene_already_ended
     @scene_already_ended = true
+    pbClearSpecialMode
+    pbClearHeaderTextScroll
     pbZoomNameSelectorOut
     pbSlideDecorOut
     pbFadeOutAndHide(@sprites) { update }
@@ -1062,6 +1204,8 @@ class PokemonParty_Scene
     pbSyncPartySpritePosition
     pbUpdateCommandHighlightAnim
     pbAnimateHPBars
+    pbSyncHeaderTextScrollPosition
+    pbUpdateHeaderTextScroll
     pbUpdateSpriteHash(@sprites)
   end
 
@@ -1162,6 +1306,10 @@ class PokemonParty_Scene
     @menu_mode    = saved_mode
     pbBuildCommandList
     pbUpdateCommandButtons(true)
+    # Consume any input still held from the keypress that just closed this
+    # popup, so a single BACK press can't immediately register again in
+    # whichever loop regains control right after this method returns
+    Input.update
     return ret
   end
 
@@ -1169,6 +1317,22 @@ class PokemonParty_Scene
   # Draws arbitrary header text (not the standard "Do what with X?"/"X
   # selected" pattern) onto button_bg — used by pbShowCommands for whatever
   # helptext the caller passed in
+  #-----------------------------------------------------------------------------
+  #-----------------------------------------------------------------------------
+  # Draws arbitrary header text (not the standard "Do what with X?"/"X
+  # selected" pattern) onto button_bg — used by pbShowCommands for whatever
+  # helptext the caller passed in. Wraps onto multiple lines and stacks
+  # them vertically around BUTTON_BG_TEXT_Y if the text is too wide to fit
+  # on one line, so longer vanilla item/status messages aren't cut off or
+  # overflow the header area.
+  #-----------------------------------------------------------------------------
+  #-----------------------------------------------------------------------------
+  # Draws arbitrary header text (not the standard "Do what with X?"/"X
+  # selected" pattern) onto button_bg — used by pbShowCommands for whatever
+  # helptext the caller passed in. If the text is too wide to fit, it's
+  # drawn onto a separate overlay sprite instead and scrolled horizontally
+  # (see pbUpdateHeaderTextScroll) rather than touching the Y position or
+  # wrapping onto multiple lines.
   #-----------------------------------------------------------------------------
   def pbDrawButtonBgHeaderText(text)
     spr = @sprites["button_bg"]
@@ -1178,15 +1342,103 @@ class PokemonParty_Scene
     bmp.blt(0, 0, base, base.rect)
     base.dispose
     pbSetSystemFont(bmp)
+
+    max_width = BUTTON_BG_W - 16   # small margin either side
     text_w = bmp.text_size(text).width
-    left_x = (BUTTON_BG_W / 2) - (text_w / 2)
-    left_x -= 1 if left_x.odd?
-    left_x = 0 if left_x < 0
-    pbDrawTextPositions(bmp, [[text, left_x, BUTTON_BG_TEXT_Y, :left,
-                                BUTTON_BG_TEXT_COLOR, BUTTON_BG_TEXT_SHADOW]])
-    old_bitmap = spr.bitmap
-    spr.bitmap = bmp
-    old_bitmap.dispose if old_bitmap && !old_bitmap.disposed? && old_bitmap != bmp
+
+    if text_w <= max_width
+      pbClearHeaderTextScroll
+      left_x = (BUTTON_BG_W / 2) - (text_w / 2)
+      left_x -= 1 if left_x.odd?
+      left_x = 0 if left_x < 0
+      pbDrawTextPositions(bmp, [[text, left_x, BUTTON_BG_TEXT_Y, :left,
+                                  BUTTON_BG_TEXT_COLOR, BUTTON_BG_TEXT_SHADOW]])
+      old_bitmap = spr.bitmap
+      spr.bitmap = bmp
+      old_bitmap.dispose if old_bitmap && !old_bitmap.disposed? && old_bitmap != bmp
+    else
+      # Text is too wide — draw the plain background (no baked text) and
+      # set up a scrolling overlay for the text itself
+      old_bitmap = spr.bitmap
+      spr.bitmap = bmp
+      old_bitmap.dispose if old_bitmap && !old_bitmap.disposed? && old_bitmap != bmp
+      pbSetupHeaderTextScroll(text, text_w, max_width)
+    end
+  end
+
+  #-----------------------------------------------------------------------------
+  # Sets up the scrolling header text overlay — a clipped viewport the
+  # width of the header area, with a sprite inside holding the full text
+  # at its natural width, animated left/right by pbUpdateHeaderTextScroll
+  #-----------------------------------------------------------------------------
+  HEADER_SCROLL_SPEED = 1.5
+  HEADER_SCROLL_PAUSE = 40
+
+  def pbSetupHeaderTextScroll(text, text_w, max_width)
+    pbClearHeaderTextScroll
+    spr = @sprites["button_bg"]
+    return if !spr
+    left_x = (BUTTON_BG_W / 2) - (max_width / 2)
+    @header_scroll_viewport = Viewport.new(spr.x + left_x, spr.y + BUTTON_BG_TEXT_Y, max_width, 20)
+    @header_scroll_viewport.z = spr.z + 1
+    text_spr = Sprite.new(@header_scroll_viewport)
+    bmp = Bitmap.new(text_w, 20)
+    pbSetSystemFont(bmp)
+    pbDrawTextPositions(bmp, [[text, 0, 0, :left, BUTTON_BG_TEXT_COLOR, BUTTON_BG_TEXT_SHADOW]])
+    text_spr.bitmap = bmp
+    text_spr.x = 0
+    @header_scroll_sprite = text_spr
+    @header_scroll_x       = 0.0
+    @header_scroll_dir     = -1
+    @header_scroll_max     = text_w - max_width
+    @header_scroll_pause   = HEADER_SCROLL_PAUSE
+  end
+
+  def pbClearHeaderTextScroll
+    @header_scroll_sprite&.bitmap&.dispose
+    @header_scroll_sprite&.dispose
+    @header_scroll_viewport&.dispose
+    @header_scroll_sprite   = nil
+    @header_scroll_viewport = nil
+  end
+
+  #-----------------------------------------------------------------------------
+  # Scrolls the header text overlay left, pauses, scrolls back right,
+  # pauses, repeats — called every frame from update. Only the X position
+  # of the text sprite moves; the header's own Y never changes.
+  #-----------------------------------------------------------------------------
+  #-----------------------------------------------------------------------------
+  # Keeps the scrolling header text's clipping viewport locked to
+  # button_bg's current position, so it stays correctly placed during the
+  # slide animations
+  #-----------------------------------------------------------------------------
+  def pbSyncHeaderTextScrollPosition
+    return if !@header_scroll_viewport
+    spr = @sprites["button_bg"]
+    return if !spr
+    max_width = @header_scroll_viewport.rect.width
+    left_x = (BUTTON_BG_W / 2) - (max_width / 2)
+    @header_scroll_viewport.x = spr.x + left_x
+    @header_scroll_viewport.y = spr.y + BUTTON_BG_TEXT_Y
+  end
+
+  def pbUpdateHeaderTextScroll
+    return if !@header_scroll_sprite
+    if @header_scroll_pause > 0
+      @header_scroll_pause -= 1
+      return
+    end
+    @header_scroll_x += HEADER_SCROLL_SPEED * @header_scroll_dir
+    if @header_scroll_x <= -@header_scroll_max
+      @header_scroll_x = -@header_scroll_max
+      @header_scroll_dir = 1
+      @header_scroll_pause = HEADER_SCROLL_PAUSE
+    elsif @header_scroll_x >= 0
+      @header_scroll_x = 0
+      @header_scroll_dir = -1
+      @header_scroll_pause = HEADER_SCROLL_PAUSE
+    end
+    @header_scroll_sprite.x = @header_scroll_x.to_i
   end
 
   #-----------------------------------------------------------------------------
@@ -1331,7 +1583,10 @@ class PokemonParty_Scene
           @menu_mode = :main
           pbBuildCommandList
           pbUpdateCommandButtons(true)
+          Input.update
         else
+          pbPlayCloseMenuSE
+          pbClearSpecialMode
           return -1
         end
       end
@@ -1672,6 +1927,110 @@ class PokemonParty_Scene
     screen = pbGetPartyScreenOwner
 
     case data
+    when :special_cancel
+      pbPlayCloseMenuSE
+      pbClearSpecialMode
+      return -1
+
+    when :special_use
+      pbPlayDecisionSE
+      return @activecmd
+
+    when :special_give
+      pbPlayDecisionSE
+      pbClearSpecialMode
+      return @activecmd
+
+    when :special_learn
+      pbPlayDecisionSE
+      pbClearSpecialMode
+      return @activecmd
+
+    when :special_battle_switch
+      # Same shape as vanilla's own quick-switch return, so the battle
+      # code calling this picker can tell "switch in this Pokémon" apart
+      # from the other battle-menu actions
+      pbPlayDecisionSE
+      pbClearSpecialMode
+      return @activecmd
+
+    when :special_battle_restore
+      # Opens the Bag through Battle::Scene#pbItemMenu and mirrors
+      # Battle::Battle#pbItemMenu's item-selection block, including turn
+      # registration via pbRegisterItem, so using an item here behaves
+      # identically to using one from the battle's own Bag command.
+      if @battle_scene_ref && @battle_idx_battler
+        oldsprites = pbFadeOutAndHide(@sprites)
+        battle = @battle_scene_ref.instance_variable_get(:@battle)
+        idxBattler = @battle_idx_battler
+        item_used = false
+        battle.pbItemMenu(idxBattler, false) do |item_id, useType, idxPkmn, idxMove, itemScene|
+          next false if !item_id
+          battler = pkmn2 = nil
+          case useType
+          when 1, 2
+            next false if !ItemHandlers.hasBattleUseOnPokemon(item_id)
+            battler = battle.pbFindBattler(idxPkmn, idxBattler)
+            pkmn2   = battle.pbParty(idxBattler)[idxPkmn]
+            next false if !battle.pbCanUseItemOnPokemon?(item_id, pkmn2, battler, itemScene)
+          when 3
+            next false if !ItemHandlers.hasBattleUseOnBattler(item_id)
+            battler = battle.pbFindBattler(idxPkmn, idxBattler)
+            pkmn2   = battler.pokemon if battler
+            next false if !battle.pbCanUseItemOnPokemon?(item_id, pkmn2, battler, itemScene)
+          when 4
+            next false if idxPkmn < 0
+            battler = battle.battlers[idxPkmn]
+            pkmn2   = battler.pokemon if battler
+          when 5
+            battler = battle.battlers[idxBattler]
+            pkmn2   = battler.pokemon if battler
+          else
+            next false
+          end
+          next false if !pkmn2
+          next false if !ItemHandlers.triggerCanUseInBattle(item_id, pkmn2, battler, idxMove,
+                                                             false, battle, itemScene)
+          next false if !battle.pbRegisterItem(idxBattler, item_id, idxPkmn, idxMove)
+          item_used = true
+          next true
+        end
+        pbFadeInAndShow(@sprites, oldsprites)
+        if item_used
+          pbClearSpecialMode
+          return -1
+        end
+      end
+      pbUpdatePartyIcons
+      pbUpdateBoxSelection
+      pbDrawNameBarContent
+      pbBuildCommandList
+      pbUpdateCommandButtons(true)
+      return nil
+
+    when :special_battle_summary
+      pkmn.able? rescue nil
+      oldsprites = pbFadeOutAndHide(@sprites)
+      summary_scene = PokemonSummary_Scene.new
+      summary_screen = PokemonSummaryScreen.new(summary_scene, true)
+      summary_screen.pbStartScreen(@party, @activecmd)
+      pbFadeInAndShow(@sprites, oldsprites)
+      pbBuildCommandList
+      pbUpdateCommandButtons(true)
+      return nil
+
+    when :special_battle_moves
+      # Opens the Summary screen on the Info page. Jumping straight to the
+      # Moves page is intended for the dedicated battle party UI.
+      oldsprites = pbFadeOutAndHide(@sprites)
+      summary_scene = PokemonSummary_Scene.new
+      summary_screen = PokemonSummaryScreen.new(summary_scene, true)
+      summary_screen.pbStartScreen(@party, @activecmd)
+      pbFadeInAndShow(@sprites, oldsprites)
+      pbBuildCommandList
+      pbUpdateCommandButtons(true)
+      return nil
+
     when :cancel
       pbPlayCloseMenuSE
       return -1
@@ -1783,5 +2142,361 @@ class PokemonPartyScreen
   def initialize(scene, party)
     custom_party_screen_initialize(scene, party)
     scene.screen_owner = self if scene.respond_to?(:screen_owner=)
+  end
+
+  #-----------------------------------------------------------------------------
+  # Override pbPokemonGiveScreen — sets the scene's give-item mode before
+  # handing off to vanilla's own logic, so the party picker shows
+  # "Give X Itemname?" with Give/Cancel instead of the normal command list
+  #-----------------------------------------------------------------------------
+  #-----------------------------------------------------------------------------
+  # Override pbPokemonGiveScreen — loops so declining a swap ("No") returns
+  # to picking a Pokémon instead of ending the whole screen, and sets the
+  # scene's give-item mode so the picker shows "Give X Itemname?"/"Holding
+  # X" instead of the normal command list
+  #-----------------------------------------------------------------------------
+  def pbPokemonGiveScreen(item)
+    @scene.pbSetGiveItemMode(item) if @scene.respond_to?(:pbSetGiveItemMode)
+    @scene.pbStartScene(@party, _INTL("Give to which Pokémon?"))
+    ret = false
+    loop do
+      @scene.pbSetGiveItemMode(item) if @scene.respond_to?(:pbSetGiveItemMode)
+      pkmnid = @scene.pbChoosePokemon
+      break if pkmnid < 0
+      if pbGiveItemToPokemon(item, @party[pkmnid], self, pkmnid)
+        ret = true
+        break
+      end
+      # Declined the swap — stay in the picker so a different Pokémon
+      # can be chosen instead
+    end
+    pbRefreshSingle(pkmnid) if defined?(pkmnid) && pkmnid && pkmnid >= 0
+    @scene.pbEndScene
+    return ret
+  end
+end
+
+#===============================================================================
+# Override pbGiveItemToPokemon — same logic as vanilla, but with shorter
+# wording for the swap confirmation and result messages
+#===============================================================================
+def pbGiveItemToPokemon(item, pkmn, scene, pkmnid = 0)
+  newitemname = GameData::Item.get(item).portion_name
+  if pkmn.egg?
+    scene.pbDisplay(_INTL("Eggs can't hold items."))
+    return false
+  elsif pkmn.mail
+    scene.pbDisplay(_INTL("{1}'s mail must be removed before giving it an item.", pkmn.name))
+    return false if !pbTakeItemFromPokemon(pkmn, scene)
+  end
+  if pkmn.hasItem?
+    olditemname = pkmn.item.portion_name
+    if scene.pbConfirm(_INTL("Swap for {1}?", newitemname))
+      $bag.remove(item)
+      if !$bag.add(pkmn.item)
+        raise _INTL("Couldn't re-store deleted item in Bag somehow") if !$bag.add(item)
+        scene.pbDisplay(_INTL("The Bag is full. The Pokémon's item could not be removed."))
+      elsif GameData::Item.get(item).is_mail?
+        if pbWriteMail(item, pkmn, pkmnid, scene)
+          pkmn.item = item
+          scene.pbDisplay(_INTL("Gave {1}.", newitemname))
+          return true
+        elsif !$bag.add(item)
+          raise _INTL("Couldn't re-store deleted item in Bag somehow")
+        end
+      else
+        pkmn.item = item
+        scene.pbDisplay(_INTL("Gave {1}.", newitemname))
+        return true
+      end
+    end
+  elsif !GameData::Item.get(item).is_mail? || pbWriteMail(item, pkmn, pkmnid, scene)
+    $bag.remove(item)
+    pkmn.item = item
+    scene.pbDisplay(_INTL("Gave {1}.", newitemname))
+    return true
+  end
+  return false
+end
+
+#===============================================================================
+# Override pbMoveTutorChoose — vanilla constructs the party screen and
+# calls pbStartScene(helptext, ...) directly, with no way to pass along
+# which move is being taught. This mirrors vanilla's logic but calls
+# pbSetTeachMoveMode right after the screen is constructed, so the picker
+# shows "Teach MoveName?"/"Can't learn MoveName" with Learn/Cancel instead
+# of the normal command list.
+#===============================================================================
+def pbMoveTutorChoose(move, movelist = nil, bymachine = false, oneusemachine = false)
+  ret = false
+  move = GameData::Move.get(move).id
+  if movelist.is_a?(Array)
+    movelist.map! { |m| GameData::Move.get(m).id }
+  end
+  pbFadeOutIn do
+    movename = GameData::Move.get(move).name
+    annot = pbMoveTutorAnnotations(move, movelist)
+    scene = PokemonParty_Scene.new
+    screen = PokemonPartyScreen.new(scene, $player.party)
+    scene.pbSetTeachMoveMode(move) if scene.respond_to?(:pbSetTeachMoveMode)
+    screen.pbStartScene(_INTL("Teach which Pokémon?"), false, annot)
+    loop do
+      chosen = screen.pbChoosePokemon
+      break if chosen < 0
+      pokemon = $player.party[chosen]
+      if pokemon.egg?
+        pbMessage(_INTL("Eggs can't be taught any moves.")) { screen.pbUpdate }
+      elsif pokemon.shadowPokemon?
+        pbMessage(_INTL("Shadow Pokémon can't be taught any moves.")) { screen.pbUpdate }
+      elsif movelist && movelist.none? { |j| j == pokemon.species }
+        pbMessage(_INTL("{1} can't learn {2}.", pokemon.name, movename)) { screen.pbUpdate }
+      elsif !pokemon.compatible_with_move?(move)
+        pbMessage(_INTL("{1} can't learn {2}.", pokemon.name, movename)) { screen.pbUpdate }
+      elsif pbLearnMove(pokemon, move, false, bymachine) { screen.pbUpdate }
+        $stats.moves_taught_by_item += 1 if bymachine
+        $stats.moves_taught_by_tutor += 1 if !bymachine
+        pokemon.add_first_move(move) if oneusemachine
+        ret = true
+        break
+      end
+      scene.pbSetTeachMoveMode(move) if scene.respond_to?(:pbSetTeachMoveMode)
+    end
+    screen.pbEndScene
+  end
+  return ret   # Returns whether the move was learned by a Pokemon
+end
+
+#===============================================================================
+# Override pbUseItem — vanilla constructs the party screen and calls
+# pbStartScene(helptext, ...) directly, with no way to pass the scene our
+# use-item mode. This mirrors vanilla's logic but calls pbSetUseItemMode
+# right after the screen is constructed, so the picker shows "Use
+# ItemName?" with Use/Cancel for each Pokémon considered.
+#===============================================================================
+def pbUseItem(bag, item, bagscene = nil)
+  itm = GameData::Item.get(item)
+  useType = itm.field_use
+  if useType == 1   # Item is usable on a Pokémon
+    if $player.pokemon_count == 0
+      pbMessage(_INTL("There is no Pokémon."))
+      return 0
+    end
+    ret = false
+    annot = nil
+    if itm.is_evolution_stone?
+      annot = []
+      $player.party.each do |pkmn|
+        elig = pkmn.check_evolution_on_use_item(item)
+        annot.push((elig) ? _INTL("ABLE") : _INTL("NOT ABLE"))
+      end
+    end
+    pbFadeOutIn do
+      scene = PokemonParty_Scene.new
+      screen = PokemonPartyScreen.new(scene, $player.party)
+      scene.pbSetUseItemMode(item) if scene.respond_to?(:pbSetUseItemMode)
+      screen.pbStartScene(_INTL("Use on which Pokémon?"), false, annot)
+      loop do
+        scene.pbSetHelpText(_INTL("Use on which Pokémon?"))
+        chosen = screen.pbChoosePokemon
+        if chosen < 0
+          ret = false
+          break
+        end
+        pkmn = $player.party[chosen]
+        next if !pbCheckUseOnPokemon(item, pkmn, screen)
+        qty = 1
+        max_at_once = ItemHandlers.triggerUseOnPokemonMaximum(item, pkmn)
+        max_at_once = [max_at_once, $bag.quantity(item)].min
+        if max_at_once > 1
+          qty = screen.scene.pbChooseNumber(
+            _INTL("How many {1} do you want to use?", GameData::Item.get(item).portion_name_plural), max_at_once
+          )
+          screen.scene.pbSetHelpText("") if screen.is_a?(PokemonPartyScreen)
+        end
+        next if qty <= 0
+        ret = ItemHandlers.triggerUseOnPokemon(item, qty, pkmn, screen)
+        next unless ret && itm.consumed_after_use?
+        bag.remove(item, qty)
+        next if bag.has?(item)
+        pbMessage(_INTL("You used your last {1}.", itm.portion_name)) { screen.pbUpdate }
+        break
+      end
+      screen.pbEndScene
+      bagscene&.pbRefresh
+    end
+    return (ret) ? 1 : 0
+  elsif useType == 2 || itm.is_machine?   # Item is usable from Bag or teaches a move
+    intret = ItemHandlers.triggerUseFromBag(item)
+    if intret >= 0
+      bag.remove(item) if intret == 1 && itm.consumed_after_use?
+      return intret
+    end
+    pbMessage(_INTL("Can't use that here."))
+    return 0
+  end
+  pbMessage(_INTL("Can't use that here."))
+  return 0
+end
+
+#===============================================================================
+# Override Battle::Scene#pbPartyScreen — vanilla's version calls
+# scene.pbStartScene(msg, numPositions), which doesn't match this custom
+# scene's pbStartScene(party, helptext, ...) signature, and builds its own
+# inline command list rather than distinguishing an active battler from a
+# benched Pokémon. This mirrors vanilla's loop structure but calls the
+# scene correctly and uses pbSetBattleMode for the command list.
+#===============================================================================
+class Battle::Scene
+  alias custom_party_pbPartyScreen pbPartyScreen
+  def pbPartyScreen(idxBattler, canCancel = false, mode = 0)
+    return custom_party_pbPartyScreen(idxBattler, canCancel, mode) if mode != 0
+
+    visibleSprites = pbFadeOutAndHide(@sprites)
+    partyPos = @battle.pbPartyOrder(idxBattler)
+    partyStart, _partyEnd = @battle.pbTeamIndexRangeFromBattlerIndex(idxBattler)
+    modParty = @battle.pbPlayerDisplayParty(idxBattler)
+
+    # A display-party index counts as "in battle" if some non-fainted
+    # battler on the player's side currently points at it
+    battle_indices = modParty.length.times.select do |i|
+      @battle.battlers.any? { |b| b && !b.fainted? && b.index.even? == idxBattler.even? && b.pokemonIndex == i }
+    end
+
+    scene = PokemonParty_Scene.new
+    switchScreen = PokemonPartyScreen.new(scene, modParty)
+    scene.pbSetBattleMode(battle_indices, self, idxBattler)
+    scene.pbStartScene(modParty, _INTL("Choose a Pokémon."))
+
+    loop do
+      idxParty = switchScreen.pbChoosePokemon
+      if idxParty < 0
+        next if !canCancel
+        break
+      end
+      idxPartyRet = -1
+      partyPos.each_with_index do |pos, i|
+        next if pos != idxParty + partyStart
+        idxPartyRet = i
+        break
+      end
+      break if yield idxPartyRet, switchScreen
+      scene.pbSetBattleMode(battle_indices, self, idxBattler)
+    end
+    switchScreen.pbEndScene
+    pbFadeInAndShow(@sprites, visibleSprites)
+  end
+
+  #-----------------------------------------------------------------------------
+  # Override pbItemMenu — vanilla's own version constructs pkmnScreen and
+  # calls pkmnScreen.pbStartScene(helptext, ...) directly, with no way to
+  # hand the scene our use-item mode. This is vanilla's exact logic
+  # (useType 1/2/3 branch), with pbSetUseItemMode called right after the
+  # party scene is constructed.
+  #-----------------------------------------------------------------------------
+  def pbItemMenu(idxBattler, _firstAction)
+    visibleSprites = pbFadeOutAndHide(@sprites)
+    oldLastPocket = $bag.last_viewed_pocket
+    oldChoices    = $bag.last_pocket_selections.clone
+    if @bagLastPocket
+      $bag.last_viewed_pocket     = @bagLastPocket
+      $bag.last_pocket_selections = @bagChoices
+    else
+      $bag.reset_last_selections
+    end
+    itemScene = PokemonBag_Scene.new
+    itemScene.pbStartScene($bag, true,
+                           proc { |item|
+                             useType = GameData::Item.get(item).battle_use
+                             next useType && useType > 0
+                           }, false)
+    wasTargeting = false
+    loop do
+      item = itemScene.pbChooseItem
+      break if !item
+      item = GameData::Item.get(item)
+      itemName = item.name
+      useType = item.battle_use
+      cmdUse = -1
+      commands = []
+      commands[cmdUse = commands.length] = _INTL("Use") if useType && useType != 0
+      commands[commands.length]          = _INTL("Cancel")
+      command = itemScene.pbShowCommands(_INTL("{1} is selected.", itemName), commands)
+      next unless cmdUse >= 0 && command == cmdUse
+
+      case useType
+      when 1, 2, 3
+        case useType
+        when 1
+          if @battle.pbTeamLengthFromBattlerIndex(idxBattler) == 1
+            break if yield item.id, useType, @battle.battlers[idxBattler].pokemonIndex, -1, itemScene
+          end
+        when 3
+          if @battle.pbPlayerBattlerCount == 1
+            break if yield item.id, useType, @battle.battlers[idxBattler].pokemonIndex, -1, itemScene
+          end
+        end
+        itemScene.pbFadeOutScene
+        party    = @battle.pbParty(idxBattler)
+        partyPos = @battle.pbPartyOrder(idxBattler)
+        partyStart, _partyEnd = @battle.pbTeamIndexRangeFromBattlerIndex(idxBattler)
+        modParty = @battle.pbPlayerDisplayParty(idxBattler)
+        pkmnScene = PokemonParty_Scene.new
+        pkmnScreen = PokemonPartyScreen.new(pkmnScene, modParty)
+        pkmnScene.pbSetUseItemMode(item.id) if pkmnScene.respond_to?(:pbSetUseItemMode)
+        pkmnScreen.pbStartScene(_INTL("Use on which Pokémon?"), @battle.pbNumPositions(0, 0))
+        idxParty = -1
+        loop do
+          pkmnScene.pbSetHelpText(_INTL("Use on which Pokémon?"))
+          idxParty = pkmnScreen.pbChoosePokemon
+          break if idxParty < 0
+          idxPartyRet = -1
+          partyPos.each_with_index do |pos, i|
+            next if pos != idxParty + partyStart
+            idxPartyRet = i
+            break
+          end
+          next if idxPartyRet < 0
+          pkmn = party[idxPartyRet]
+          next if !pkmn || pkmn.egg?
+          idxMove = -1
+          if useType == 2
+            idxMove = pkmnScreen.pbChooseMove(pkmn, _INTL("Restore which move?"))
+            next if idxMove < 0
+          end
+          break if yield item.id, useType, idxPartyRet, idxMove, pkmnScene
+          pkmnScene.pbSetUseItemMode(item.id) if pkmnScene.respond_to?(:pbSetUseItemMode)
+        end
+        pkmnScene.pbEndScene
+        break if idxParty >= 0
+        itemScene.pbFadeInScene
+      when 4
+        idxTarget = -1
+        if @battle.pbOpposingBattlerCount(idxBattler) == 1
+          @battle.allOtherSideBattlers(idxBattler).each { |b| idxTarget = b.index }
+          break if yield item.id, useType, idxTarget, -1, itemScene
+        else
+          wasTargeting = true
+          itemScene.pbFadeOutScene
+          tempVisibleSprites = visibleSprites.clone
+          tempVisibleSprites["commandWindow"] = false
+          tempVisibleSprites["targetWindow"]  = true
+          idxTarget = pbChooseTarget(idxBattler, GameData::Target.get(:Foe), tempVisibleSprites)
+          if idxTarget >= 0
+            break if yield item.id, useType, idxTarget, -1, self
+          end
+          wasTargeting = false
+          pbFadeOutAndHide(@sprites)
+          itemScene.pbFadeInScene
+        end
+      when 5
+        break if yield item.id, useType, idxBattler, -1, itemScene
+      end
+    end
+    @bagLastPocket = $bag.last_viewed_pocket
+    @bagChoices    = $bag.last_pocket_selections.clone
+    $bag.last_viewed_pocket     = oldLastPocket
+    $bag.last_pocket_selections = oldChoices
+    itemScene.pbEndScene
+    pbFadeInAndShow(@sprites, visibleSprites) if !wasTargeting
   end
 end

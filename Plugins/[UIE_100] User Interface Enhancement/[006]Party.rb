@@ -155,7 +155,7 @@ class PokemonParty_Scene
     @sprites["bg_overlay"].setBitmap(PARTY_FOLDER + "bg_overlay.png")
     @sprites["bg_overlay"].x = OVERLAY_REST_X
     @sprites["bg_overlay"].y = Graphics.height
-    @sprites["bg_overlay"].z = 3
+    @sprites["bg_overlay"].z = 6
 
     @sprites["name_bar"] = Sprite.new(@viewport)
     base_name_bar = Bitmap.new(PARTY_FOLDER + "name_bar.png")
@@ -1418,8 +1418,8 @@ class PokemonParty_Scene
     return if !spr
     max_width = @header_scroll_viewport.rect.width
     left_x = (BUTTON_BG_W / 2) - (max_width / 2)
-    @header_scroll_viewport.x = spr.x + left_x
-    @header_scroll_viewport.y = spr.y + BUTTON_BG_TEXT_Y
+    @header_scroll_viewport.rect.x = spr.x + left_x
+    @header_scroll_viewport.rect.y = spr.y + BUTTON_BG_TEXT_Y
   end
 
   def pbUpdateHeaderTextScroll

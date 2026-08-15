@@ -5,8 +5,8 @@
 #===============================================================================
 # Replaces the default Pokémon Essentials battle UI (command bar, fight bar,
 # party ball tray, message box, and Bag/item flow) with a custom graphic set.
-# Everything in this file works by reopening Battle::Scene and either
-# aliasing + overriding an existing method, or adding new ones it calls.
+# Works by reopening Battle::Scene, aliasing and overriding existing methods
+# where needed, and adding new supporting methods.
 module Settings
   CUSTOM_BATTLE_UI_GRAPHICS_PATH = "Graphics/Custom UI/Battle System/"
 end
@@ -20,8 +20,8 @@ class Battle::Scene
   # z-order, low to high. Left big gaps on purpose so new layers can slot in
   # later without renumbering everything.
   Z_SHADOW_OVERLAY   = 100
-  Z_SUMMARY_PANEL    = 125   # party_summary_panel.png + its icon/overlay - ball_overlay/ball_bar/icon_ball sit above it
   Z_BALL_OVERLAY     = 150
+  Z_SUMMARY_PANEL    = 175   # party_summary_panel.png/party_moves_panel.png + their icon/overlay - sit above shadow/ball_overlay, below ball_bar/icon_ball
   Z_BALL_BAR_OVERLAY = 200
   Z_PARTY_BALL       = 250
   Z_COMMAND_BUTTON   = 300
@@ -152,7 +152,7 @@ class Battle::Scene
     "cancel"  => :right,
     "command" => :bottom,
   }
-  BAG_UI_SLIDE_FRAMES = 12   # slowed down from 6 - the load in/out was too quick
+  BAG_UI_SLIDE_FRAMES = 12
   BAG_UI_OPACITY_NO_LAST_ITEM = 140   # item_command's opacity when there's no saved last-used item yet
 
   # Text baked onto the Bag buttons - same colour/shadow as the message
@@ -387,6 +387,160 @@ class Battle::Scene
   SUMMARY_TYPE_ICON_POS = [[404, 10], [474, 10]]
   SUMMARY_TYPE_ICON_FILE = "type_icons"
   SUMMARY_TYPE_ICON_SIZE = [64, 24]   # 456 / 24 = 19 rows
+
+  # Moves summary page - reached by confirming check_moves on the Summary
+  # panel. Same panel slot/position as the Summary panel (the two are never
+  # shown at once, so they share SUMMARY_PANEL_RESTING_POS), just a
+  # different background graphic.
+  MOVES_PANEL_FILE = "party_moves_panel"
+
+  # Move detail content. Baked onto its own sprite (movesPanelMoveInfo),
+  # separate from the Pokemon's own name/gender/types (movesPanelInfo), so
+  # switching move slots only has to rebake this piece, not the whole page.
+  MOVES_NAME_POS = [208, 58]
+  # Single icon, not the pair the Summary panel draws - same custom
+  # type_icons.png sheet/icon_position convention either way.
+  MOVES_TYPE_ICON_POS = [384, 56]
+  MOVES_PP_LABEL = "PP"
+  MOVES_PP_LABEL_POS = [464, 58]
+  MOVES_PP_VALUE_POS = [520, 58]      # drawn as "##/##"
+  MOVES_CATEGORY_LABEL = "CATEGORY"
+  MOVES_CATEGORY_LABEL_POS = [58, 106]
+  MOVES_CATEGORY_VALUE_POS = [90, 138]   # literal Physical/Special/Status text
+  # category.png icon, additional to (not instead of) the text above -
+  # single column, 56x84, 56x28 per icon, same essentials category order
+  # (0 Physical, 1 Special, 2 Status) as everywhere else in this file.
+  MOVES_CATEGORY_ICON_POS = [14, 134]
+  MOVES_CATEGORY_ICON_FILE = "category"   # Battle System/ root
+  MOVES_CATEGORY_ICON_SIZE = [56, 28]
+  MOVES_POWER_LABEL = "POWER"
+  MOVES_POWER_LABEL_POS = [580, 106]
+  MOVES_POWER_VALUE_POS = [748, 106]     # "---" for a move with no set power
+  MOVES_ACCURACY_LABEL = "ACCURACY"
+  MOVES_ACCURACY_LABEL_POS = [580, 138]
+  MOVES_ACCURACY_VALUE_POS = [748, 138]  # "---" for a move that can't miss
+  MOVES_DESC_POS = [36, 186]        # x moved +20 from its original 16
+  MOVES_DESC_MAX_WIDTH = 728        # width taken down 40 from its original 768
+
+  # Move slot picker - 2x2 grid, reached the moment this page opens. Skips
+  # (never builds/shows a button for, never lands on via nav) any slot the
+  # Pokemon hasn't actually learned a move into. Cancel is part of the same
+  # index list, off to the right of the grid's right-hand column.
+  MOVES_SLOT_KEYS = ["moveSlot0", "moveSlot1", "moveSlot2", "moveSlot3"]
+  MOVES_SLOT_POS = {
+    "moveSlot0" => [326, 402],
+    "moveSlot1" => [406, 402],
+    "moveSlot2" => [326, 434],
+    "moveSlot3" => [406, 434],
+  }
+  MOVES_SLOT_GRID = { "moveSlot0" => [0, 0], "moveSlot1" => [0, 1], "moveSlot2" => [1, 0], "moveSlot3" => [1, 1] }
+  MOVES_SLOT_GRAPHICS_PATH = FIGHT_SUMMARY_GRAPHICS_PATH   # Battle System/Party/
+  MOVES_SLOT_FILE     = "move_slot"
+  MOVES_SLOT_SEL_FILE = "move_slot_sel"
+
+  # Party page - replaces the default Essentials party screen entirely,
+  # reached by confirming Pokemon on the Command menu. 2x3 grid, same
+  # borrowed cancel as everywhere else, "Choose a Pokemon" in the message
+  # window standing in for "What will {1} do?" while this page is up.
+  PARTY_GRAPHICS_PATH = FIGHT_SUMMARY_GRAPHICS_PATH   # Battle System/Party/
+  PARTY_SLOT_KEYS = ["partySlot0", "partySlot1", "partySlot2", "partySlot3", "partySlot4", "partySlot5"]
+  PARTY_SLOT_POS = {
+    "partySlot0" => [114, 64],  "partySlot1" => [432, 64],
+    "partySlot2" => [114, 174], "partySlot3" => [432, 174],
+    "partySlot4" => [114, 284], "partySlot5" => [432, 284],
+  }
+  PARTY_SLOT_GRID = {
+    "partySlot0" => [0, 0], "partySlot1" => [0, 1],
+    "partySlot2" => [1, 0], "partySlot3" => [1, 1],
+    "partySlot4" => [2, 0], "partySlot5" => [2, 1],
+  }
+  PARTY_SLOT_ACTIVE_FILE = "party_slot_active"   # slot has a Pokemon in it, not currently highlighted
+  PARTY_SLOT_EMPTY_FILE  = "party_slot_empty"    # slot is unfilled
+  PARTY_SLOT_SEL_FILE    = "party_slot_sel"      # slot has a Pokemon in it AND is currently highlighted
+  # The floating glow selector that mirrors the currently-highlighted slot's
+  # position, using the same graphic/offset as the Fight page's own move
+  # grid selector. Distinct from PARTY_SLOT_SEL_FILE above, which swaps the
+  # slot's own background graphic instead.
+  PARTY_MENU_SEL_FILE   = FIGHT_SEL_FILES["move0"]
+  PARTY_MENU_SEL_OFFSET = FIGHT_SEL_OFFSET["move0"]
+  PARTY_PROMPT_TEXT = "Choose a Pokémon."
+
+  # Content baked onto each slot's own bitmap, on top of whichever background
+  # (active/sel) is currently showing - all relative to the slot's own
+  # top-left (PARTY_SLOT_POS), same idiom as the Summary/Moves panels.
+  PARTY_ICON_OFFSET = [0, 0]        # animated PokemonIconSprite sits exactly on the slot's own xy
+  PARTY_NAME_POS = [66, 18]
+  PARTY_GENDER_POS = [228, 18]
+  PARTY_LEVEL_POS = [14, 64]            # drawn as "Lv.###"
+  PARTY_HP_TEXT_CENTER = [182, 78]      # "###/###", auto-centered both x and y, subpixel-safe
+  # icon_hp_overlay.png (static frame, reused from the root Battle System
+  # folder, same file the Summary panel's HP bar uses) + icon_party_hp_overlay
+  # (this page's own HP bar fill graphic - 96x12, the usual 3 vertical 4px
+  # bands stacked green/yellow/red, same clipped-rect convention as every
+  # other HP bar in this file).
+  PARTY_HP_OVERLAY_FILE = "icon_hp_overlay"
+  PARTY_HP_OVERLAY_POS = [96, 46]
+  PARTY_HP_BAR_FILE = "icon_party_hp_overlay"
+  PARTY_HP_BAR_POS = [128, 52]
+
+  # Party action menu - reached by confirming a Pokemon on the Party page.
+  # Same summary/check_moves buttons the Fight page uses (same files, same
+  # selector graphics), just this page's own positions. Cancel backs out to
+  # the slot list, remembering which slot to land back on
+  # (@partyMenuLastSlotKey, shared with the slot list itself).
+  PARTY_SUMMARY_POS = [168, 372]
+  PARTY_CHECK_MOVES_POS = [414, 372]
+
+  # Shift button - the leftmost of the four action menu buttons, same fade-
+  # in load method as summary/check_moves. Unlike those two its own content
+  # (name/gender, icon, IN BATTLE/SWITCH label) is baked/rebuilt fresh every
+  # time the action menu opens, since it reflects whichever Pokemon was just
+  # selected on the slot list. All content positions below are relative to
+  # the button's own top-left (PARTY_SHIFT_POS) - PARTY_SHIFT_WIDTH (316) is
+  # that button graphic's own width, used as the centering axis to avoid
+  # subpixels, same idiom as pbDrawCenteredText.
+  PARTY_SHIFT_FILE = "icon_shift"
+  PARTY_SHIFT_POS = [242, 92]
+  PARTY_SHIFT_WIDTH = 316
+  PARTY_SHIFT_NAME_GENDER_Y = 34   # name + gender symbol drawn as one centered block
+  PARTY_SHIFT_ICON_POS = [126, 68]      # animated PokemonIconSprite
+  PARTY_SHIFT_STATE_Y = 158             # "IN BATTLE" or "SWITCH", centered same as name/gender
+  # shift's own highlight - a dedicated graphic (replaces moves_sel.png,
+  # same animated-strip convention, 4 frames) rather than reusing the
+  # summary/check_moves one. Lives in Battle System/Party/ (not the root
+  # graphics folder moves_sel.png itself uses), 300x936 - 300x234 per frame.
+  PARTY_SHIFT_SEL_FILE = "shift_sel"
+  PARTY_SHIFT_SEL_OFFSET = [8, -8]
+
+  # Double battle target picker - reached after confirming a move that needs
+  # a target (Battle::Scene#pbChooseTarget). Same 2x2 grid/positions as the
+  # move buttons, same borrowed cancel - enemy1/enemy2 up top, party1/party2
+  # underneath. Battler index per slot follows the engine's own interleaved
+  # ordering (side = index % 2, field position = index / 2).
+  TARGET_PANEL_KEYS = ["enemy1", "enemy2", "party1", "party2"]
+  TARGET_PANEL_BATTLER_INDEX = { "enemy1" => 1, "enemy2" => 3, "party1" => 0, "party2" => 2, "cancel" => -1 }
+  TARGET_PANEL_POS = {
+    "enemy1" => FIGHT_MOVE_POS["move0"],
+    "enemy2" => FIGHT_MOVE_POS["move1"],
+    "party1" => FIGHT_MOVE_POS["move2"],
+    "party2" => FIGHT_MOVE_POS["move3"],
+  }
+  TARGET_PANEL_FILE       = "pokemon_panel_field"         # a live battler's actually in that slot
+  TARGET_PANEL_EMPTY_FILE = "pokemon_panel_field_empty"   # nothing in that slot (e.g. a single battle)
+  # moves_sel for a normal single-target pick; swaps to this for anything
+  # that hits multiple battlers at once (num_targets == 2) so it reads as
+  # "this attack isn't just about the one panel you're on".
+  TARGET_SEL_FIELD_FILE = "move_field_sel"
+  # Content baked/placed onto an occupied panel - a real PokemonIconSprite
+  # (same class the Summary panel uses) so it keeps its usual bounce/blink
+  # animation, plus the battler's name baked onto the panel bitmap itself in
+  # the message window's own text colour/shadow, auto-centered within a
+  # fixed width via the same fail-safe formula used everywhere else in this
+  # file (avoids landing on a sub-pixel x).
+  TARGET_PANEL_ICON_OFFSET = [14, 16]
+  TARGET_PANEL_NAME_Y = 38
+  TARGET_PANEL_NAME_X_START = 82
+  TARGET_PANEL_NAME_WIDTH = 158
 
   alias customUI_pbInitSprites pbInitSprites
   def pbInitSprites
@@ -843,8 +997,16 @@ class Battle::Scene
     pbAnimateBagItemSel
     pbAnimateFightSelector
     pbAnimateSummaryPanelSelector
+    pbAnimateTargetPanelSelector
+    pbAnimateTargetPanelIcons
     pbAnimateBattlerIconBob
     pbAnimateSummaryPanelIcon
+    pbAnimateMovesPanelSelector
+    pbAnimateMovesPanelIcon
+    pbAnimatePartyMenuSelector
+    pbAnimatePartyIcons
+    pbAnimatePartyActionSelector
+    pbAnimatePartyShiftIcon
   end
 
   # Hides/shows the default Essentials data boxes (the HP/name/status boxes
@@ -1054,6 +1216,10 @@ class Battle::Scene
         currentKey = "fight"
       elsif Input.trigger?(Input::DOWN)
         currentKey = "run" if currentKey == "fight"
+      elsif Input.trigger?(Input::LEFT) && currentKey == "fight"
+        currentKey = "bag"   # drops straight down into the row's left end, same as Down always landing on run
+      elsif Input.trigger?(Input::RIGHT) && currentKey == "fight"
+        currentKey = "pokemon"   # ...and the row's right end
       elsif Input.trigger?(Input::LEFT) && currentKey != "fight"
         idx = CMD_ROW.index(currentKey)
         currentKey = CMD_ROW[(idx - 1) % CMD_ROW.length]
@@ -1100,8 +1266,10 @@ class Battle::Scene
         # etc.) triggers the NORMAL hidden->shown entrance via pbShowWindow
         # on its own - no extra animation layered on top.
         #
-        # Pokemon isn't built yet, so confirming it just returns the index
-        # and leaves every Command-page asset exactly as it is.
+        # Pokemon works the same as Fight/Bag - just returns its index here.
+        # The battle engine calls back into this Scene's own pbPartyMenu
+        # override once it gets that index, which owns the whole transition
+        # from there (same division of responsibility as Fight/Bag).
         pbHideCommandPageAssets if currentKey == "run"
         ret = cw.index
         @lastCmd[idxBattler] = ret
@@ -1163,8 +1331,9 @@ class Battle::Scene
   # that type has no graphic, "empty" if the slot has no move) plus the move
   # name and PP. Private (load -> copy -> draw) bitmap, not setBitmap
   # directly - type graphics are reused across multiple move slots, and
-  # setBitmap sharing a cached bitmap across sprites is what caused the
-  # item_command/USE button text-bleed bug earlier in this file.
+  # setBitmap shares a cached bitmap across sprites, which would bleed text
+  # between slots (see pbDrawBagCommandButton for the same issue with the
+  # item_command/USE button).
   def pbBuildFightButtonBitmap(battler, idx)
     move = battler.moves[idx]
     if move && move.id
@@ -1339,8 +1508,13 @@ class Battle::Scene
     pbUpdateFightButtonOpacity(landOnKey)
   end
 
-  # Reverse of pbShowFightButtons.
+  # Reverse of pbShowFightButtons. Guarded against being called a second time
+  # in a row with nothing on screen to hide - pbChooseTarget calls this
+  # itself before the move grid's own yield block gets a chance to (it
+  # already did the same job), so the redundant second call just needs to
+  # no-op rather than replay the slide-out on already-invisible sprites.
   def pbHideFightButtons
+    return if !@sprites["bagUI_cancel"] || !@sprites["bagUI_cancel"].visible
     pbSEPlay("SlideDown", 60)
     cancel = @sprites["bagUI_cancel"]
     cancelPos = BAG_UI_POS["cancel"]
@@ -1459,6 +1633,461 @@ class Battle::Scene
       BAG_CANCEL_FLASH_FRAMES.times { pbUpdate }
       sprite.setBitmap(folder + FIGHT_CHECK_MOVES_FILE + ".png")
       BAG_CANCEL_FLASH_FRAMES.times { pbUpdate }
+    end
+  end
+
+  # Moves summary page - copy of the Summary panel's own scaffolding
+  # (build/show/hide/selector/icon), trimmed down to just what's being kept
+  # for now: the animated icon, name, gender, both type icons, and cancel.
+  # Reuses the exact same position constants the Summary panel uses for
+  # those, since they're staying put - only the background graphic and the
+  # sprite keys (movesPanel* instead of summaryPanel*, so the two pages
+  # don't stomp on each other's sprites) are different.
+
+  def pbBuildMovesPanelIcon(pkmn)
+    @sprites["movesPanelIcon"]&.dispose
+    @sprites["movesPanelIcon"] = PokemonIconSprite.new(pkmn, @viewport)
+    icon = @sprites["movesPanelIcon"]
+    icon.x = SUMMARY_PANEL_RESTING_POS[0] + SUMMARY_ICON_OFFSET[0]
+    icon.y = SUMMARY_PANEL_RESTING_POS[1] + SUMMARY_ICON_OFFSET[1]
+    icon.z = Z_SUMMARY_PANEL + 1
+    icon.visible = false
+  end
+
+  def pbAnimateMovesPanelIcon
+    icon = @sprites["movesPanelIcon"]
+    icon.update if icon && icon.visible
+  end
+
+  # Bakes name/gender/type icons onto party_moves_panel.png - called fresh
+  # every time this page opens, same reasoning as pbBuildSummaryPanelInfo.
+  def pbBuildMovesPanelInfo(battler)
+    pkmn = battler.pokemon
+    if !@sprites["movesPanelInfo"]
+      @sprites["movesPanelInfo"] = IconSprite.new(@viewport)
+      @sprites["movesPanelInfo"].x = SUMMARY_PANEL_RESTING_POS[0]
+      @sprites["movesPanelInfo"].y = SUMMARY_PANEL_RESTING_POS[1]
+      @sprites["movesPanelInfo"].z = Z_SUMMARY_PANEL + 1
+      @sprites["movesPanelInfo"].visible = false
+    end
+    info = @sprites["movesPanelInfo"]
+    base = Bitmap.new(FIGHT_SUMMARY_GRAPHICS_PATH + MOVES_PANEL_FILE + ".png")
+    bmp = Bitmap.new(base.width, base.height)
+    base.dispose
+    pbSetSystemFont(bmp)
+
+    texts = []
+    texts << [pkmn.name, SUMMARY_NAME_POS[0], SUMMARY_NAME_POS[1], :left, BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR]
+    if pkmn.gender != 2   # 0 = male, 1 = female, 2 = genderless (no symbol)
+      genderText  = (pkmn.gender == 0) ? "♂" : "♀"
+      genderColor = (pkmn.gender == 0) ? SUMMARY_GENDER_MALE_COLOR : SUMMARY_GENDER_FEMALE_COLOR
+      texts << [genderText, SUMMARY_GENDER_POS[0], SUMMARY_GENDER_POS[1], :left, genderColor, BAG_UI_TEXT_SHADOW_COLOR]
+    end
+    pbDrawTextPositions(bmp, texts)
+    pbDrawSummaryTypeIcons(bmp, pkmn)   # same sheet/positions as the Summary panel
+
+    info.bitmap&.dispose
+    info.bitmap = bmp
+
+    pbBuildMovesPanelIcon(pkmn)
+  end
+
+  # Wraps text within MOVES_DESC_MAX_WIDTH - same word-wrap approach as
+  # pbDrawSummaryAbilityDescription, just generalised to take its own
+  # position/width rather than the Summary panel's ability-box constants.
+  def pbDrawMovesDescription(bmp, text)
+    return if !text || text.empty?
+    words = text.split(" ")
+    lines = []
+    currentLine = ""
+    words.each do |word|
+      candidate = currentLine.empty? ? word : "#{currentLine} #{word}"
+      if !currentLine.empty? && bmp.text_size(candidate).width > MOVES_DESC_MAX_WIDTH
+        lines << currentLine
+        currentLine = word
+      else
+        currentLine = candidate
+      end
+    end
+    lines << currentLine if !currentLine.empty?
+    lineHeight = bmp.text_size("Wg").height + 2
+    positions = lines.each_with_index.map do |line, i|
+      [line, MOVES_DESC_POS[0], MOVES_DESC_POS[1] + (i * lineHeight),
+       :left, BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR]
+    end
+    pbDrawTextPositions(bmp, positions)
+  end
+
+  # Bakes the actual move's own detail - name, type icon, PP, category,
+  # power, accuracy, description. Separate sprite/bake from
+  # pbBuildMovesPanelInfo (the Pokemon's own name/gender/types) specifically
+  # so that once the move-slot button set exists, switching slots only ever
+  # has to call this again rather than the whole page. moveIdx defaults to 0
+  # since there's no way to pick a slot yet.
+  def pbBuildMovesPanelMoveInfo(battler, moveIdx = 0)
+    if !@sprites["movesPanelMoveInfo"]
+      @sprites["movesPanelMoveInfo"] = IconSprite.new(@viewport)
+      @sprites["movesPanelMoveInfo"].x = SUMMARY_PANEL_RESTING_POS[0]
+      @sprites["movesPanelMoveInfo"].y = SUMMARY_PANEL_RESTING_POS[1]
+      @sprites["movesPanelMoveInfo"].z = Z_SUMMARY_PANEL + 1
+      @sprites["movesPanelMoveInfo"].visible = false
+    end
+    moveInfo = @sprites["movesPanelMoveInfo"]
+    # Loads its own copy of the base graphic just for its dimensions (same
+    # as pbBuildMovesPanelInfo/pbBuildSummaryPanelInfo do) rather than
+    # depending on the movesPanel background sprite already existing -
+    # pbShowMovesPanel calls this before that sprite is guaranteed built.
+    base = Bitmap.new(FIGHT_SUMMARY_GRAPHICS_PATH + MOVES_PANEL_FILE + ".png")
+    bmp = Bitmap.new(base.width, base.height)
+    base.dispose
+    move = battler.moves[moveIdx]
+    if move && move.id
+      pbSetSystemFont(bmp)
+      ppText = "#{move.pp}/#{battler.pokemon.moves[moveIdx].totalpp}"
+      # move.category is the raw 0/1/2 Physical/Special/Status value (no
+      # pbIsPhysical?/pbIsSpecial?/pbIsStatus? helpers on Battle::Move).
+      categoryText = case move.category
+                     when 0 then _INTL("Physical")
+                     when 1 then _INTL("Special")
+                     else _INTL("Status")
+                     end
+      powerText = (move.power > 0) ? move.power.to_s : "---"   # baseDamage is deprecated as of v21.1
+      accuracyText = (move.accuracy > 0) ? move.accuracy.to_s : "---"
+      texts = [
+        [move.name, MOVES_NAME_POS[0], MOVES_NAME_POS[1], :left, BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR],
+        [MOVES_PP_LABEL, MOVES_PP_LABEL_POS[0], MOVES_PP_LABEL_POS[1], :left, BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR],
+        [ppText, MOVES_PP_VALUE_POS[0], MOVES_PP_VALUE_POS[1], :left, BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR],
+        [MOVES_CATEGORY_LABEL, MOVES_CATEGORY_LABEL_POS[0], MOVES_CATEGORY_LABEL_POS[1], :left,
+         BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR],
+        [categoryText, MOVES_CATEGORY_VALUE_POS[0], MOVES_CATEGORY_VALUE_POS[1], :left,
+         BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR],
+        [MOVES_POWER_LABEL, MOVES_POWER_LABEL_POS[0], MOVES_POWER_LABEL_POS[1], :left,
+         BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR],
+        [powerText, MOVES_POWER_VALUE_POS[0], MOVES_POWER_VALUE_POS[1], :left, BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR],
+        [MOVES_ACCURACY_LABEL, MOVES_ACCURACY_LABEL_POS[0], MOVES_ACCURACY_LABEL_POS[1], :left,
+         BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR],
+        [accuracyText, MOVES_ACCURACY_VALUE_POS[0], MOVES_ACCURACY_VALUE_POS[1], :left,
+         BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR],
+      ]
+      pbDrawTextPositions(bmp, texts)
+      # Battle::Move doesn't carry its own description text - that's only on
+      # the underlying GameData::Move record, looked up by id.
+      pbDrawMovesDescription(bmp, GameData::Move.get(move.id).description)
+      # Single icon (not the Pokemon's pair) - same custom sheet/icon_position
+      # convention pbDrawSummaryTypeIcons uses, just one blit at one position.
+      sheet = Bitmap.new(Settings::CUSTOM_BATTLE_UI_GRAPHICS_PATH + SUMMARY_TYPE_ICON_FILE + ".png")
+      w, h = SUMMARY_TYPE_ICON_SIZE
+      row = GameData::Type.get(move.type).icon_position
+      bmp.blt(MOVES_TYPE_ICON_POS[0], MOVES_TYPE_ICON_POS[1], sheet, Rect.new(0, row * h, w, h))
+      sheet.dispose
+      # Category icon - custom category.png sheet (Battle System/ root),
+      # single column, 56x84 total, 56x28 per icon, same essentials category
+      # order (0 Physical, 1 Special, 2 Status) as move.category itself,
+      # used as the row index. Additional to the CATEGORY text above, not a
+      # replacement for it - its own separate position.
+      categorySheet = Bitmap.new(Settings::CUSTOM_BATTLE_UI_GRAPHICS_PATH + MOVES_CATEGORY_ICON_FILE + ".png")
+      cw, ch = MOVES_CATEGORY_ICON_SIZE
+      bmp.blt(MOVES_CATEGORY_ICON_POS[0], MOVES_CATEGORY_ICON_POS[1], categorySheet,
+              Rect.new(0, move.category * ch, cw, ch))
+      categorySheet.dispose
+    end
+    moveInfo.bitmap&.dispose
+    moveInfo.bitmap = bmp
+  end
+
+  # Whether the Pokemon actually has a move in a given slot - move_slot0-3
+  # map straight onto moves[0..3]. Empty slots never get a button built,
+  # never get landed on by nav, and never get clicked.
+  def pbMovesSlotEnabled?(key, battler)
+    idx = MOVES_SLOT_KEYS.index(key)
+    return false if !idx
+    move = battler.moves[idx]
+    return move && move.id ? true : false
+  end
+
+  # Builds a button for every occupied slot; empty slots are skipped
+  # entirely rather than shown as a dimmed placeholder. Rebuilt every time
+  # the page opens.
+  def pbBuildMovesSlotButtons(battler)
+    MOVES_SLOT_KEYS.each do |key|
+      spriteKey = "movesSlot_#{key}"
+      if pbMovesSlotEnabled?(key, battler)
+        if !@sprites[spriteKey]
+          @sprites[spriteKey] = IconSprite.new(@viewport)
+          @sprites[spriteKey].setBitmap(MOVES_SLOT_GRAPHICS_PATH + MOVES_SLOT_FILE + ".png")
+          @sprites[spriteKey].z = Z_COMMAND_BUTTON
+          @sprites[spriteKey].x, @sprites[spriteKey].y = MOVES_SLOT_POS[key]
+          @sprites[spriteKey].opacity = 0
+          @sprites[spriteKey].visible = false
+        end
+      elsif @sprites[spriteKey]
+        @sprites[spriteKey].dispose
+        @sprites.delete(spriteKey)
+      end
+    end
+  end
+
+  # Every currently-built slot button sprite, in key order - used for the
+  # fade in/out cascade and for click detection.
+  def pbMovesSlotButtonSprites
+    return MOVES_SLOT_KEYS.filter_map { |key| @sprites["movesSlot_#{key}"] }
+  end
+
+  # Opacity scheme covers both the slot buttons and cancel - same shape as
+  # pbUpdateSummaryPanelOpacity/pbUpdateFightButtonOpacity.
+  def pbUpdateMovesPanelOpacity(selectedKey)
+    MOVES_SLOT_KEYS.each do |key|
+      sprite = @sprites["movesSlot_#{key}"]
+      next if !sprite
+      sprite.opacity = (key == selectedKey) ? CMD_BUTTON_OPACITY_SELECTED : CMD_BUTTON_OPACITY_NORMAL
+    end
+    cancel = @sprites["bagUI_cancel"]
+    cancel.opacity = (selectedKey == "cancel") ? CMD_BUTTON_OPACITY_SELECTED : CMD_BUTTON_OPACITY_NORMAL if cancel
+    pbUpdateMovesPanelSelector(selectedKey)
+  end
+
+  # move_slot_sel for a slot, cancel's own Bag UI highlight for cancel - same
+  # idea as pbUpdateFightSelector.
+  def pbUpdateMovesPanelSelector(selectedKey)
+    if !@sprites["movesPanelSel"]
+      @sprites["movesPanelSel"] = IconSprite.new(@viewport)
+      @sprites["movesPanelSel"].visible = false
+      @movesPanelSelFile  = nil
+      @movesPanelSelFrame = 0
+      @movesPanelSelTick  = 0
+    end
+    sel = @sprites["movesPanelSel"]
+    file = (selectedKey == "cancel") ? FIGHT_SEL_FILES["cancel"] : MOVES_SLOT_SEL_FILE
+    path = (selectedKey == "cancel") ? Settings::CUSTOM_BATTLE_UI_GRAPHICS_PATH : MOVES_SLOT_GRAPHICS_PATH
+    if @movesPanelSelFile != file
+      sel.setBitmap(path + file + ".png")
+      # move_slot_sel is a single still frame, not a 4-frame animated strip
+      # like every other selector here - only slice it into FIGHT_SEL_FRAMES
+      # when it's actually cancel's own (animated) highlight.
+      if selectedKey == "cancel"
+        frameHeight = sel.bitmap.height / FIGHT_SEL_FRAMES
+        sel.src_rect.set(0, 0, sel.bitmap.width, frameHeight)
+      else
+        sel.src_rect.set(0, 0, sel.bitmap.width, sel.bitmap.height)
+      end
+      @movesPanelSelFile  = file
+      @movesPanelSelFrame = 0
+      @movesPanelSelTick  = 0
+    end
+    pos = (selectedKey == "cancel") ? BAG_UI_POS["cancel"] : MOVES_SLOT_POS[selectedKey]
+    offset = (selectedKey == "cancel") ? FIGHT_SEL_OFFSET["cancel"] : [0, 0]
+    sel.x = pos[0] + offset[0]
+    sel.y = pos[1] + offset[1]
+    @movesPanelSelKey = selectedKey
+    sel.z = (selectedKey == "cancel") ? Z_BAG_POCKET_ARROW + 1 : Z_COMMAND_SELECTOR
+    sel.opacity = 255
+    sel.visible = true
+  end
+
+  # Non-wrapping 2x2 grid nav, skipping any slot without a move - same style
+  # as pbFightNextKey. Right from the grid's right-hand column reaches
+  # cancel; Left from cancel returns to whichever slot was last selected via
+  # the keyboard (@movesPanelLastSlotKey - mouse clicks never touch it, per
+  # spec), or the first available slot if nothing's been picked yet.
+  def pbMovesPanelNextKey(currentKey, dRow, dCol, battler)
+    if currentKey == "cancel"
+      return currentKey if dCol != -1
+      return @movesPanelLastSlotKey if @movesPanelLastSlotKey && pbMovesSlotEnabled?(@movesPanelLastSlotKey, battler)
+      return MOVES_SLOT_KEYS.find { |key| pbMovesSlotEnabled?(key, battler) } || currentKey
+    end
+    pos = MOVES_SLOT_GRID[currentKey]
+    return currentKey if !pos
+    row, col = pos
+    return "cancel" if dCol == 1 && col == 1
+    if dCol != 0
+      partnerKey = MOVES_SLOT_GRID.key([row, col + dCol])
+      return (partnerKey && pbMovesSlotEnabled?(partnerKey, battler)) ? partnerKey : currentKey
+    elsif dRow != 0
+      partnerKey = MOVES_SLOT_GRID.key([row + dRow, col])
+      return (partnerKey && pbMovesSlotEnabled?(partnerKey, battler)) ? partnerKey : currentKey
+    end
+    return currentKey
+  end
+
+  def pbAnimateMovesPanelSelector
+    sel = @sprites["movesPanelSel"]
+    return if !sel || !sel.visible
+    return if @movesPanelSelKey != "cancel"   # move_slot_sel is a single still frame - nothing to step
+    @movesPanelSelTick += 1
+    return if @movesPanelSelTick < SEL_ANIM_SPEED
+    @movesPanelSelTick = 0
+    frameHeight = sel.bitmap.height / FIGHT_SEL_FRAMES
+    @movesPanelSelFrame = (@movesPanelSelFrame + 1) % FIGHT_SEL_FRAMES
+    sel.src_rect.y = @movesPanelSelFrame * frameHeight
+  end
+
+  # Entrance - party_moves_panel scrolls down from above the screen, cancel
+  # slides back in from the right (borrowed from the Bag UI, same as
+  # everywhere else). Called after pbHideSummaryPanel has already taken the
+  # Summary panel off screen.
+  def pbShowMovesPanel(selectedKey, battler)
+    pbBuildMovesPanelInfo(battler)      # rebuilt every time, so it's never stale
+    pbBuildMovesSlotButtons(battler)
+    moveIdx = MOVES_SLOT_KEYS.index(selectedKey) || 0
+    pbBuildMovesPanelMoveInfo(battler, moveIdx)
+    if !@sprites["movesPanel"]
+      @sprites["movesPanel"] = IconSprite.new(@viewport)
+      @sprites["movesPanel"].setBitmap(FIGHT_SUMMARY_GRAPHICS_PATH + MOVES_PANEL_FILE + ".png")
+      @sprites["movesPanel"].z = Z_SUMMARY_PANEL
+      @sprites["movesPanel"].x = SUMMARY_PANEL_RESTING_POS[0]
+      @sprites["movesPanel"].visible = false
+    end
+    pbSEPlay("SlideUp", 60)
+    panel = @sprites["movesPanel"]
+    panelRestY = SUMMARY_PANEL_RESTING_POS[1]
+    panel.y = -panel.bitmap.height
+    panel.visible = true
+
+    cancel = @sprites["bagUI_cancel"]
+    cancelPos = BAG_UI_POS["cancel"]
+    cancel.z = Z_BAG_POCKET_ARROW
+    cancel.x = Graphics.width
+    cancel.y = cancelPos[1]
+    cancel.opacity = 0
+    cancel.visible = true
+
+    # Slot buttons just fade in place, same as the Fight page's own move
+    # buttons - no slide, they're not going anywhere.
+    slotSprites = pbMovesSlotButtonSprites
+    slotSprites.each { |sprite| sprite.opacity = 0; sprite.visible = true }
+
+    pbUpdateMovesPanelSelector(selectedKey)
+    sel = @sprites["movesPanelSel"]
+    selRestX, selRestY = sel.x, sel.y
+    slideSelWithCancel = (selectedKey == "cancel")
+    sel.x = Graphics.width + FIGHT_SEL_OFFSET["cancel"][0] if slideSelWithCancel
+    sel.opacity = 0
+
+    BAG_UI_SLIDE_FRAMES.times do |frame|
+      progress = (frame + 1) / BAG_UI_SLIDE_FRAMES.to_f
+      panel.y = -panel.bitmap.height + ((panelRestY - (-panel.bitmap.height)) * progress)
+      cancel.x = Graphics.width + ((cancelPos[0] - Graphics.width) * progress)
+      cancel.opacity = (255 * progress).to_i
+      slotSprites.each { |sprite| sprite.opacity = (CMD_BUTTON_OPACITY_NORMAL * progress).to_i }
+      if slideSelWithCancel
+        sel.x = (Graphics.width + FIGHT_SEL_OFFSET["cancel"][0]) +
+                ((selRestX - (Graphics.width + FIGHT_SEL_OFFSET["cancel"][0])) * progress)
+      end
+      sel.opacity = (255 * progress).to_i
+      pbUpdate
+    end
+    panel.y = panelRestY
+    cancel.x = cancelPos[0]
+    slotSprites.each { |sprite| sprite.opacity = CMD_BUTTON_OPACITY_NORMAL }
+    sel.x, sel.y = selRestX, selRestY
+    sel.opacity = 255
+    pbUpdateMovesPanelOpacity(selectedKey)
+    @sprites["movesPanelInfo"].visible = true if @sprites["movesPanelInfo"]
+    @sprites["movesPanelIcon"].visible = true if @sprites["movesPanelIcon"]
+    @sprites["movesPanelMoveInfo"].visible = true if @sprites["movesPanelMoveInfo"]
+  end
+
+  # Reverse of pbShowMovesPanel.
+  def pbHideMovesPanel
+    pbSEPlay("SlideDown", 60)
+    @sprites["movesPanelInfo"].visible = false if @sprites["movesPanelInfo"]
+    @sprites["movesPanelIcon"].visible = false if @sprites["movesPanelIcon"]
+    @sprites["movesPanelMoveInfo"].visible = false if @sprites["movesPanelMoveInfo"]
+    panel = @sprites["movesPanel"]
+    cancel = @sprites["bagUI_cancel"]
+    panelRestY = SUMMARY_PANEL_RESTING_POS[1]
+    cancelPos = BAG_UI_POS["cancel"]
+    cancelStartOpacity = cancel ? cancel.opacity : 0
+    slotSprites = pbMovesSlotButtonSprites
+    slotStartOpacity = {}
+    slotSprites.each { |sprite| slotStartOpacity[sprite] = sprite.opacity }
+    sel = @sprites["movesPanelSel"]
+    selStartOpacity = sel ? sel.opacity : 0
+    selStartX = sel ? sel.x : nil
+    selBoundToCancel = sel && @movesPanelSelKey == "cancel"
+    BAG_UI_SLIDE_FRAMES.times do |frame|
+      progress = (frame + 1) / BAG_UI_SLIDE_FRAMES.to_f
+      panel.y = panelRestY + ((-panel.bitmap.height - panelRestY) * progress) if panel
+      if cancel
+        cancel.x = cancelPos[0] + ((Graphics.width - cancelPos[0]) * progress)
+        cancel.opacity = (cancelStartOpacity * (1 - progress)).to_i
+      end
+      slotSprites.each { |sprite| sprite.opacity = (slotStartOpacity[sprite] * (1 - progress)).to_i }
+      if sel
+        if selBoundToCancel
+          sel.x = selStartX + (((Graphics.width + FIGHT_SEL_OFFSET["cancel"][0]) - selStartX) * progress)
+        end
+        sel.opacity = (selStartOpacity * (1 - progress)).to_i
+      end
+      pbUpdate
+    end
+    panel.visible = false if panel
+    if cancel
+      cancel.visible = false
+      cancel.z = Z_BAG_UI
+    end
+    slotSprites.each { |sprite| sprite.visible = false }
+    sel.visible = false if sel
+  end
+
+  # This page's own input loop - cancel only for now (no wraparound needed
+  # with a single button). BACK/cancel closes it and hands control straight
+  # back to pbSummaryPanelMenu, which re-shows the Summary panel.
+  def pbMovesPanelMenu(battler)
+    currentKey = MOVES_SLOT_KEYS.find { |key| pbMovesSlotEnabled?(key, battler) } || "cancel"
+    @movesPanelLastSlotKey = currentKey if currentKey != "cancel"
+    pbShowMovesPanel(currentKey, battler)
+    loop do
+      pbUpdate
+
+      dRow = 0
+      dCol = 0
+      if Input.trigger?(Input::UP)
+        dRow = -1
+      elsif Input.trigger?(Input::DOWN)
+        dRow = 1
+      elsif Input.trigger?(Input::LEFT)
+        dCol = -1
+      elsif Input.trigger?(Input::RIGHT)
+        dCol = 1
+      end
+      newKey = pbMovesPanelNextKey(currentKey, dRow, dCol, battler)
+      if newKey != currentKey
+        pbPlayCursorSE
+        currentKey = newKey
+        # Keyboard-only - a mouse click never updates this, so cancel
+        # always snaps back to whichever slot was last picked with the
+        # keyboard, not whatever the mouse happened to hover last.
+        @movesPanelLastSlotKey = currentKey if currentKey != "cancel"
+        pbUpdateMovesPanelOpacity(currentKey)
+        pbBuildMovesPanelMoveInfo(battler, MOVES_SLOT_KEYS.index(currentKey)) if currentKey != "cancel"
+      end
+
+      mouseClicked = Mouse.active? && Mouse.click?
+      clickedKey = nil
+      if mouseClicked
+        MOVES_SLOT_KEYS.each do |key|
+          sprite = @sprites["movesSlot_#{key}"]
+          clickedKey = key if sprite && Mouse.over?(sprite)
+        end
+        clickedKey = "cancel" if @sprites["bagUI_cancel"] && Mouse.over?(@sprites["bagUI_cancel"])
+      end
+      if clickedKey && clickedKey != currentKey
+        currentKey = clickedKey   # mouse clicks don't touch @movesPanelLastSlotKey - keyboard-only
+        pbUpdateMovesPanelOpacity(currentKey)
+        pbBuildMovesPanelMoveInfo(battler, MOVES_SLOT_KEYS.index(currentKey)) if currentKey != "cancel"
+      end
+      confirmed = Input.trigger?(Input::USE) || clickedKey
+
+      if (confirmed && currentKey == "cancel") || Input.trigger?(Input::BACK)
+        pbPlayCancelSE
+        pbFlashBagCancelButton
+        pbHideMovesPanel
+        break
+      end
+      # Confirming a move slot doesn't lead anywhere yet beyond what
+      # navigating there already does (swapping the displayed move info) -
+      # this page is inspect-only, not an actual move-use picker.
     end
   end
 
@@ -1791,7 +2420,15 @@ class Battle::Scene
   # and cancel, no wraparound. check_moves doesn't lead anywhere yet (not
   # designed); cancel plays its usual flash then closes the panel, handing
   # control back to pbFightMenu, which re-shows the move grid.
-  def pbSummaryPanelMenu(battler)
+  # restoreCommandPrompt: true (the default) re-scrolls the message box back
+  # in with "What will {1} do?" on cancel - correct when this is reached
+  # from the Fight page, where the message box was already up. The Party
+  # page's own shift/summary/check_moves/cancel menu never shows a message
+  # box at all, so it passes false here - without it, this would briefly
+  # flash "What will {1} do?" back in (with whatever stale text was last set
+  # anywhere in the battle) only for the Party page to immediately hide it
+  # again, a visible flicker with nothing useful in it.
+  def pbSummaryPanelMenu(battler, restoreCommandPrompt = true)
     currentKey = "check_moves"
     pbHideMessageBox   # "What will {1} do?" has no business showing over this page
     pbShowSummaryPanel(currentKey, battler)
@@ -1824,15 +2461,19 @@ class Battle::Scene
         pbPlayCancelSE
         pbFlashBagCancelButton
         pbHideSummaryPanel
-        # Silent - pbFightMenu's pbShowFightButtons plays its own SlideUp
-        # right after this returns, and both firing together doubled up.
-        pbScrollMessageBoxIn(false)
-        pbSetMessageWindowText(@lastCommandPromptText) if @lastCommandPromptText
+        if restoreCommandPrompt
+          # Silent - pbFightMenu's pbShowFightButtons plays its own SlideUp
+          # right after this returns, and both firing together doubled up.
+          pbScrollMessageBoxIn(false)
+          pbSetMessageWindowText(@lastCommandPromptText) if @lastCommandPromptText
+        end
         break
       elsif confirmed && currentKey == "check_moves"
         pbPlayDecisionSE
         pbFlashSummaryPanelCheckMovesButton
-        # Doesn't lead anywhere yet - check_moves isn't designed.
+        pbHideSummaryPanel
+        pbMovesPanelMenu(battler)
+        pbShowSummaryPanel(currentKey, battler)
       end
     end
   end
@@ -1877,9 +2518,9 @@ class Battle::Scene
   #
   # 2x2 move grid, summary underneath, cancel underneath that - Up from
   # summary goes back to whichever move was last selected via the keyboard
-  # (@fightLastMoveKey; mouse clicks don't update it, per spec). Confirming
-  # summary opens the Summary panel (pbSummaryPanelMenu); its own cancel
-  # closes that panel and returns here with the move grid shown again.
+  # (@fightLastMoveKey; mouse clicks don't update it). Confirming summary
+  # opens the Summary panel (pbSummaryPanelMenu); its own cancel closes
+  # that panel and returns here with the move grid shown again.
   #
   # TODO: double battles aren't handled here - two battlers choosing moves
   # back-to-back, and target selection between multiple allies/foes, still
@@ -1892,6 +2533,12 @@ class Battle::Scene
   # wired up yet either - megaEvoPossible is accepted but currently unused.
   def pbFightMenu(idxBattler, megaEvoPossible = false)
     battler = @battle.battlers[idxBattler]
+    # Snapshot this BEFORE pbHideCommandButtons runs below - that call hides
+    # the Command menu's own cancel button too (if it was showing), which as
+    # a side effect resets @cmdCancelWanted to false. Without this snapshot
+    # the tail's "was this the second Pokemon of a double battle" check would
+    # always see false by the time it runs, and skip the full exit animation.
+    wasSecondBattlerOfDouble = @cmdCancelWanted
     # pbCommandMenuEx already un-hid the data boxes right before it returned
     # (it doesn't know Fight is about to take over the screen), same as the
     # Bag case - hide them again here, restored at the end.
@@ -1934,7 +2581,7 @@ class Battle::Scene
         clickedKey = "cancel" if @sprites["bagUI_cancel"] && Mouse.over?(@sprites["bagUI_cancel"])
       end
       if clickedKey && clickedKey != currentKey
-        currentKey = clickedKey   # mouse clicks don't touch @fightLastMoveKey - keyboard-only, per spec
+        currentKey = clickedKey   # mouse clicks don't touch @fightLastMoveKey - keyboard-only
         pbUpdateFightButtonOpacity(currentKey)
       end
       confirmed = Input.trigger?(Input::USE) || clickedKey
@@ -1969,12 +2616,359 @@ class Battle::Scene
       end
     end
 
-    if result
-      pbHideCommandPageAssets   # move accepted, turn's committed - close the whole Command page, same as Run
+    if result && (@battle.singleBattle? || wasSecondBattlerOfDouble)
+      # Move accepted and there's nobody else left to act this round (either
+      # a single battle, or this was the second/last Pokemon of a double
+      # battle's turn) - close the whole Command page, same as Run.
+      pbHideCommandPageAssets
+    elsif result
+      # Move accepted, but this was the FIRST Pokemon of a double battle's
+      # turn - the second Pokemon still needs Fight/Bag/Pokemon/Run, so this
+      # just does the usual scroll back to the Command menu rather than
+      # tearing the whole page down.
+      pbShowCommandButtons("fight")
     else
       pbShowCommandButtons("fight")   # cancelled - bring the Command buttons back, message box was never touched
     end
     pbShowDataBoxes
+    return result
+  end
+
+  # Double battle target picker - reached after confirming a move that needs
+  # a target (Battle::Scene#pbChooseTarget, called by Battle#pbChooseTarget
+  # once Battle#pbFightMenu's block has registered the move itself). Same
+  # 2x2 grid/positions/borrowed cancel as the move buttons - enemy1/enemy2
+  # up top, party1/party2 underneath. Auto-resolves with no UI at all when
+  # there's only one legal target (or none), since there's nothing to
+  # actually pick. A single confirm (Enter or click) both selects and
+  # confirms, same convention as everywhere else in this file.
+
+  # Whether a given panel slot is a legal target for this move - same side
+  # as the user for an ally-only move, the other side for a foe move, and
+  # any living battler at all for a field-wide move (:AllBattlers etc, which
+  # sets both targets_foe and targets_all).
+  def pbTargetPanelEligible?(key, idxBattler, target_data)
+    idx = TARGET_PANEL_BATTLER_INDEX[key]
+    return false if !idx || idx >= @battle.battlers.length
+    battler = @battle.battlers[idx]
+    return false if !battler || battler.fainted?
+    return true if target_data.targets_all
+    sameSide = (idx.even? == idxBattler.even?)
+    return sameSide ? !target_data.targets_foe : target_data.targets_foe
+  end
+
+  # Builds/rebakes the four panels - pokemon_panel_field for an occupied
+  # slot, pokemon_panel_field_empty for an empty one (single battle, or a
+  # fainted partner not yet replaced), with that battler's name baked onto
+  # it. Also builds/rebuilds a real PokemonIconSprite per occupied slot so
+  # the icon keeps its usual bounce/blink animation while this page is up
+  # (same idea as the Summary panel's own icon) - private-copy bitmap for
+  # the panel graphic itself, same reasoning as everywhere else in this file
+  # that bakes text onto a shared-path graphic.
+  def pbBuildTargetPanels
+    TARGET_PANEL_KEYS.each do |key|
+      spriteKey = "targetPanel_#{key}"
+      if !@sprites[spriteKey]
+        @sprites[spriteKey] = IconSprite.new(@viewport)
+        @sprites[spriteKey].z = Z_COMMAND_BUTTON
+        @sprites[spriteKey].x, @sprites[spriteKey].y = TARGET_PANEL_POS[key]
+        @sprites[spriteKey].opacity = 0
+        @sprites[spriteKey].visible = false
+      end
+      panelSprite = @sprites[spriteKey]
+      idx = TARGET_PANEL_BATTLER_INDEX[key]
+      battler = (idx && idx < @battle.battlers.length) ? @battle.battlers[idx] : nil
+      occupied = battler && !battler.fainted?
+      file = occupied ? TARGET_PANEL_FILE : TARGET_PANEL_EMPTY_FILE
+      base = Bitmap.new(Settings::CUSTOM_BATTLE_UI_GRAPHICS_PATH + file + ".png")
+      bmp = Bitmap.new(base.width, base.height)
+      bmp.blt(0, 0, base, base.rect)
+      base.dispose
+      iconKey = "targetPanelIcon_#{key}"
+      if occupied
+        text = battler.name
+        pbSetSystemFont(bmp)
+        text_w = bmp.text_size(text).width
+        left_x = TARGET_PANEL_NAME_X_START + (TARGET_PANEL_NAME_WIDTH / 2) - (text_w / 2)
+        left_x -= 1 if left_x.odd?
+        left_x = TARGET_PANEL_NAME_X_START if left_x < TARGET_PANEL_NAME_X_START
+        pbDrawTextPositions(bmp, [[text, left_x, TARGET_PANEL_NAME_Y, :left, BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR]])
+        @sprites[iconKey]&.dispose
+        @sprites[iconKey] = PokemonIconSprite.new(battler.pokemon, @viewport)
+        @sprites[iconKey].x = TARGET_PANEL_POS[key][0] + TARGET_PANEL_ICON_OFFSET[0]
+        @sprites[iconKey].y = TARGET_PANEL_POS[key][1] + TARGET_PANEL_ICON_OFFSET[1]
+        @sprites[iconKey].z = Z_COMMAND_BUTTON + 1
+        @sprites[iconKey].visible = false
+      elsif @sprites[iconKey]
+        @sprites[iconKey].dispose
+        @sprites.delete(iconKey)
+      end
+      panelSprite.bitmap&.dispose
+      panelSprite.bitmap = bmp
+    end
+  end
+
+  # Every currently-built target panel icon sprite, in key order - used by
+  # pbShowTargetPanels/pbHideTargetPanels so they fade in/out alongside
+  # their panel, and by pbAnimateTargetPanelIcons to step their animation.
+  def pbTargetPanelIconSprites
+    return TARGET_PANEL_KEYS.filter_map { |key| @sprites["targetPanelIcon_#{key}"] }
+  end
+
+  # Steps each occupied panel's icon animation - PokemonIconSprite handles
+  # its own bounce/blink timing internally, this just has to call it every
+  # frame like the Summary panel's icon does.
+  def pbAnimateTargetPanelIcons
+    pbTargetPanelIconSprites.each { |icon| icon.update if icon.visible }
+  end
+
+  # Same opacity scheme as everywhere else, plus the highlight sprite.
+  def pbUpdateTargetPanelOpacity(selectedKey, isField)
+    TARGET_PANEL_KEYS.each do |key|
+      sprite = @sprites["targetPanel_#{key}"]
+      next if !sprite
+      sprite.opacity = (key == selectedKey) ? CMD_BUTTON_OPACITY_SELECTED : CMD_BUTTON_OPACITY_NORMAL
+    end
+    cancel = @sprites["bagUI_cancel"]
+    cancel.opacity = (selectedKey == "cancel") ? CMD_BUTTON_OPACITY_SELECTED : CMD_BUTTON_OPACITY_NORMAL if cancel
+    pbUpdateTargetPanelSelector(selectedKey, isField)
+  end
+
+  # Moves/re-skins the highlight - moves_sel for a normal single-target pick
+  # (same graphic/offset the move grid uses), move_field_sel instead when the
+  # move being aimed hits multiple battlers at once, so it reads as "this
+  # isn't just about the one panel you're on". Cancel reuses the Bag UI's
+  # own highlight, same as the move grid.
+  def pbUpdateTargetPanelSelector(selectedKey, isField)
+    if !@sprites["targetPanelSel"]
+      @sprites["targetPanelSel"] = IconSprite.new(@viewport)
+      @sprites["targetPanelSel"].z = Z_COMMAND_SELECTOR
+      @sprites["targetPanelSel"].visible = false
+      @targetPanelSelFile  = nil
+      @targetPanelSelFrame = 0
+      @targetPanelSelTick  = 0
+    end
+    sel = @sprites["targetPanelSel"]
+    file = (selectedKey == "cancel") ? FIGHT_SEL_FILES["cancel"] : (isField ? TARGET_SEL_FIELD_FILE : FIGHT_SEL_FILES["move0"])
+    if @targetPanelSelFile != file
+      sel.setBitmap(Settings::CUSTOM_BATTLE_UI_GRAPHICS_PATH + file + ".png")
+      frameHeight = sel.bitmap.height / FIGHT_SEL_FRAMES
+      sel.src_rect.set(0, 0, sel.bitmap.width, frameHeight)
+      @targetPanelSelFile  = file
+      @targetPanelSelFrame = 0
+      @targetPanelSelTick  = 0
+    end
+    pos = (selectedKey == "cancel") ? BAG_UI_POS["cancel"] : TARGET_PANEL_POS[selectedKey]
+    offset = (selectedKey == "cancel") ? FIGHT_SEL_OFFSET["cancel"] : FIGHT_SEL_OFFSET["move0"]
+    sel.x = pos[0] + offset[0]
+    sel.y = pos[1] + offset[1]
+    @targetPanelSelKey = selectedKey
+    sel.z = (selectedKey == "cancel") ? Z_BAG_POCKET_ARROW + 1 : Z_COMMAND_SELECTOR
+    sel.opacity = 255
+    sel.visible = true
+  end
+
+  # Steps the target panel selector's animation frame - same pattern as
+  # pbAnimateFightSelector.
+  def pbAnimateTargetPanelSelector
+    sel = @sprites["targetPanelSel"]
+    return if !sel || !sel.visible
+    @targetPanelSelTick += 1
+    return if @targetPanelSelTick < SEL_ANIM_SPEED
+    @targetPanelSelTick = 0
+    frameHeight = sel.bitmap.height / FIGHT_SEL_FRAMES
+    @targetPanelSelFrame = (@targetPanelSelFrame + 1) % FIGHT_SEL_FRAMES
+    sel.src_rect.y = @targetPanelSelFrame * frameHeight
+  end
+
+  # Entrance for the target panels - same idea as pbShowFightButtons (cancel
+  # slides in from the right, the four panels just fade in place). Called
+  # after pbHideFightButtons has already taken the move grid off screen -
+  # the message box/prompt text stay up untouched, same as the move grid.
+  def pbShowTargetPanels(landOnKey, isField)
+    pbBuildTargetPanels
+    pbSEPlay("SlideUp", 60)
+    cancel = @sprites["bagUI_cancel"]
+    cancelPos = BAG_UI_POS["cancel"]
+    cancel.z = Z_BAG_POCKET_ARROW
+    cancel.x = Graphics.width
+    cancel.y = cancelPos[1]
+    cancel.opacity = 0
+    cancel.visible = true
+    TARGET_PANEL_KEYS.each do |key|
+      sprite = @sprites["targetPanel_#{key}"]
+      sprite.opacity = 0
+      sprite.visible = true
+    end
+    icons = pbTargetPanelIconSprites
+    icons.each { |icon| icon.opacity = 0; icon.visible = true }
+    pbUpdateTargetPanelSelector(landOnKey, isField)
+    sel = @sprites["targetPanelSel"]
+    selRestX = sel.x
+    slideSelWithCancel = (landOnKey == "cancel")
+    sel.x = Graphics.width + FIGHT_SEL_OFFSET["cancel"][0] if slideSelWithCancel
+    sel.opacity = 0
+    BAG_UI_SLIDE_FRAMES.times do |frame|
+      progress = (frame + 1) / BAG_UI_SLIDE_FRAMES.to_f
+      cancel.x = Graphics.width + ((cancelPos[0] - Graphics.width) * progress)
+      cancel.opacity = (255 * progress).to_i
+      TARGET_PANEL_KEYS.each { |key| @sprites["targetPanel_#{key}"].opacity = (CMD_BUTTON_OPACITY_NORMAL * progress).to_i }
+      icons.each { |icon| icon.opacity = (255 * progress).to_i }
+      if slideSelWithCancel
+        sel.x = (Graphics.width + FIGHT_SEL_OFFSET["cancel"][0]) +
+                ((selRestX - (Graphics.width + FIGHT_SEL_OFFSET["cancel"][0])) * progress)
+      end
+      sel.opacity = (255 * progress).to_i
+      pbUpdate
+    end
+    cancel.x = cancelPos[0]
+    cancel.opacity = CMD_BUTTON_OPACITY_NORMAL
+    TARGET_PANEL_KEYS.each { |key| @sprites["targetPanel_#{key}"].opacity = CMD_BUTTON_OPACITY_NORMAL }
+    icons.each { |icon| icon.opacity = 255 }
+    sel.x = selRestX
+    sel.opacity = 255
+    pbUpdateTargetPanelOpacity(landOnKey, isField)
+  end
+
+  # Reverse of pbShowTargetPanels.
+  def pbHideTargetPanels
+    pbSEPlay("SlideDown", 60)
+    cancel = @sprites["bagUI_cancel"]
+    cancelPos = BAG_UI_POS["cancel"]
+    cancelStartOpacity = cancel ? cancel.opacity : 0
+    startOpacity = {}
+    TARGET_PANEL_KEYS.each { |key| startOpacity[key] = @sprites["targetPanel_#{key}"].opacity if @sprites["targetPanel_#{key}"] }
+    icons = pbTargetPanelIconSprites
+    iconStartOpacity = {}
+    icons.each { |icon| iconStartOpacity[icon] = icon.opacity }
+    sel = @sprites["targetPanelSel"]
+    selStartOpacity = sel ? sel.opacity : 0
+    selStartX = sel ? sel.x : nil
+    slideSelWithCancel = sel && @targetPanelSelKey == "cancel"
+    BAG_UI_SLIDE_FRAMES.times do |frame|
+      progress = (frame + 1) / BAG_UI_SLIDE_FRAMES.to_f
+      if cancel
+        cancel.x = cancelPos[0] + ((Graphics.width - cancelPos[0]) * progress)
+        cancel.opacity = (cancelStartOpacity * (1 - progress)).to_i
+      end
+      TARGET_PANEL_KEYS.each do |key|
+        sprite = @sprites["targetPanel_#{key}"]
+        next if !sprite
+        sprite.opacity = (startOpacity[key] * (1 - progress)).to_i
+      end
+      icons.each { |icon| icon.opacity = (iconStartOpacity[icon] * (1 - progress)).to_i }
+      if sel
+        if slideSelWithCancel
+          sel.x = selStartX + (((Graphics.width + FIGHT_SEL_OFFSET["cancel"][0]) - selStartX) * progress)
+        end
+        sel.opacity = (selStartOpacity * (1 - progress)).to_i
+      end
+      pbUpdate
+    end
+    cancel.visible = false if cancel
+    cancel.z = Z_BAG_UI if cancel
+    TARGET_PANEL_KEYS.each { |key| @sprites["targetPanel_#{key}"].visible = false if @sprites["targetPanel_#{key}"] }
+    icons.each { |icon| icon.visible = false }
+    sel.visible = false if sel
+  end
+
+  # Works out where Up/Down/Left/Right from the current key land, given
+  # which panels are actually legal targets. Non-wrapping - Down from the
+  # bottom row goes to cancel, Up from cancel goes back to whichever target
+  # was last on (or the first eligible one). Blocked directions just return
+  # the current key unchanged, same convention as pbFightNextKey.
+  TARGET_PANEL_GRID = { "enemy1" => [0, 0], "enemy2" => [0, 1], "party1" => [1, 0], "party2" => [1, 1] }
+  def pbTargetPanelNextKey(currentKey, dRow, dCol, eligible)
+    if currentKey == "cancel"
+      return currentKey if dRow != -1
+      return (@targetLastKey && eligible.include?(@targetLastKey)) ? @targetLastKey : (eligible.first || currentKey)
+    end
+    pos = TARGET_PANEL_GRID[currentKey]
+    return "cancel" if !pos
+    row, col = pos
+    if dCol != 0
+      partnerKey = TARGET_PANEL_GRID.key([row, col + dCol])
+      return (partnerKey && eligible.include?(partnerKey)) ? partnerKey : currentKey
+    elsif dRow != 0
+      partnerRow = row + dRow
+      return "cancel" if partnerRow > 1
+      return currentKey if partnerRow < 0
+      partnerKey = TARGET_PANEL_GRID.key([partnerRow, col])
+      return (partnerKey && eligible.include?(partnerKey)) ? partnerKey : currentKey
+    end
+    return currentKey
+  end
+
+  # Battle::Scene#pbChooseTarget - called by Battle#pbChooseTarget once
+  # Battle#pbFightMenu's block has already registered the move itself. Must
+  # return a single battler index, or -1 to cancel back to the move grid
+  # (Battle#pbChooseTarget treats that as a false yield, so the move grid
+  # comes back to let the player pick again rather than the page closing).
+  #
+  # Skips the UI entirely and just returns straight away if there's only one
+  # legal target (or none) - nothing to actually choose in that case, same
+  # as how a single battle never shows this page at all (num_targets == 1
+  # moves in a single battle only ever have exactly one legal target).
+  def pbChooseTarget(idxBattler, target_data)
+    eligible = TARGET_PANEL_KEYS.select { |key| pbTargetPanelEligible?(key, idxBattler, target_data) }
+    return -1 if eligible.empty?
+    return TARGET_PANEL_BATTLER_INDEX[eligible.first] if eligible.length == 1 && !target_data.targets_all
+    isField = target_data.targets_all || target_data.num_targets == 2
+    pbHideFightButtons   # no-op if the move grid's already down - see the guard added there
+    currentKey = (@targetLastKey && eligible.include?(@targetLastKey)) ? @targetLastKey : eligible.first
+    pbShowTargetPanels(currentKey, isField)
+    result = -1
+    loop do
+      pbUpdate
+      dRow = 0
+      dCol = 0
+      if Input.trigger?(Input::UP)
+        dRow = -1
+      elsif Input.trigger?(Input::DOWN)
+        dRow = 1
+      elsif Input.trigger?(Input::LEFT)
+        dCol = -1
+      elsif Input.trigger?(Input::RIGHT)
+        dCol = 1
+      end
+      newKey = pbTargetPanelNextKey(currentKey, dRow, dCol, eligible)
+      if newKey != currentKey
+        pbPlayCursorSE
+        currentKey = newKey
+        @targetLastKey = currentKey if eligible.include?(currentKey)
+        pbUpdateTargetPanelOpacity(currentKey, isField)
+      end
+      mouseClicked = Mouse.active? && Mouse.click?
+      clickedKey = nil
+      if mouseClicked
+        eligible.each do |key|
+          sprite = @sprites["targetPanel_#{key}"]
+          clickedKey = key if sprite && Mouse.over?(sprite)
+        end
+        clickedKey = "cancel" if @sprites["bagUI_cancel"] && Mouse.over?(@sprites["bagUI_cancel"])
+      end
+      if clickedKey && clickedKey != currentKey
+        currentKey = clickedKey
+        pbUpdateTargetPanelOpacity(currentKey, isField)
+      end
+      # Single click confirms - no separate "select" step, same convention
+      # used everywhere else in this file.
+      confirmed = Input.trigger?(Input::USE) || clickedKey
+      if (confirmed && currentKey == "cancel") || Input.trigger?(Input::BACK)
+        pbPlayCancelSE
+        pbFlashBagCancelButton
+        result = -1
+        break
+      elsif confirmed
+        pbPlayDecisionSE
+        result = TARGET_PANEL_BATTLER_INDEX[currentKey]
+        break
+      end
+    end
+    pbHideTargetPanels
+    # Cancelled - the move grid needs to be showing again, since the calling
+    # pbFightMenu loop expects that to still be true after a rejected yield.
+    pbShowFightButtons(@battle.battlers[idxBattler], @fightLastMoveKey || "move0") if result < 0
     return result
   end
 
@@ -2227,10 +3221,10 @@ class Battle::Scene
       if key == "command"
         # Built via pbDrawBagCommandButton below instead - it needs
         # periodic rebaking (to reflect the current last-used item's icon/
-        # absence), and item_command.png is now ALSO loaded by the Use Item
-        # page's own USE button (pbBuildUseItemButton), which turned out to
-        # share the same cached Bitmap object when both used setBitmap
-        # directly - baking text onto one silently bled onto the other. A
+        # absence). item_command.png is also loaded by the Use Item page's
+        # own USE button (pbBuildUseItemButton); both share the same cached
+        # Bitmap object when using setBitmap directly, so baking text onto
+        # one would silently bleed onto the other. A
         # private (non-cached) bitmap avoids that entirely.
       else
         @sprites[spriteKey].setBitmap(Settings::CUSTOM_BATTLE_UI_GRAPHICS_PATH + BAG_UI_FILES[key] + ".png")
@@ -2278,12 +3272,12 @@ class Battle::Scene
   # (Re)bakes item_command's bitmap from scratch - background, "LAST ITEM
   # USED" label, and (once pbLastUsedItem actually returns something) that
   # item's icon at BAG_UI_COMMAND_ICON_POS. Always builds a fresh private
-  # bitmap (load -> copy -> draw), NEVER draws directly onto whatever
+  # bitmap (load -> copy -> draw), never draws directly onto whatever
   # setBitmap returns, since item_command.png is also loaded by the Use
-  # Item page's own USE button and the two sprites turned out to share a
-  # cached Bitmap object when both used setBitmap - baking text onto one
-  # bled onto the other. Called once at build time and again every time the
-  # Bag page is shown (pbShowBagButtons), so the icon always reflects the
+  # Item page's own USE button and the two sprites share a cached Bitmap
+  # object when both use setBitmap - baking text onto one would bleed onto
+  # the other. Called once at build time and again every time the Bag page
+  # is shown (pbShowBagButtons), so the icon always reflects the
   # current last-used item (or its absence, e.g. once it's run out).
   def pbDrawBagCommandButton
     sprite = @sprites["bagUI_command"]
@@ -2945,7 +3939,7 @@ class Battle::Scene
         sprite.opacity = (targetOpacity * progress).to_i
         # bagItemSel rides along with whichever slot it's bound to, same
         # edge/distance as that slot's own button, rather than sitting
-        # fixed in place while just fading - same fix as bagSel got.
+        # fixed in place while just fading.
         sel.x = sprite.x + BAG_ITEM_SEL_OFFSET[0] if slot == landOnSlot
       end
       sel.opacity = (255 * progress).to_i
@@ -3044,11 +4038,11 @@ class Battle::Scene
         end
       end
 
-      # Mouse.click? is read ONCE per frame into mouseClicked and reused
-      # below - calling it repeatedly (once per widget) was the actual bug
-      # behind cancel/the arrows never responding to a click: this engine's
-      # Mouse.click? consumes/resets itself after the first read in a given
-      # frame, so only whichever check ran first ever saw it as true. Every
+      # Mouse.click? is read once per frame into mouseClicked and reused
+      # below. This engine's Mouse.click? consumes/resets itself after the
+      # first read in a given frame, so calling it repeatedly (once per
+      # widget) would mean only whichever check ran first ever saw it as
+      # true. Every
       # other click-driven loop in this file (Command menu, pbBagMenuLoop)
       # already reads it exactly once for the same reason.
       mouseClicked = Mouse.active? && Mouse.click?
@@ -3151,8 +4145,7 @@ class Battle::Scene
   # Reverse of the fade-in pbScrollCommandPanelIn plays for this button -
   # used when the player actually backs out (BACK/click), so it scrolls away
   # immediately rather than waiting for the next battler's Command page to
-  # sync it away with no animation at all. No slide SE - the user found the
-  # slide sound distracting/redundant on this particular button.
+  # sync it away with no animation at all. No slide SE is played here.
   def pbHideCmdCancelButton
     return if !@cmdCancelShown
     cancel = @sprites["bagUI_cancel"]
@@ -3280,11 +4273,11 @@ class Battle::Scene
     return if @sprites["useItemButton"]
     size = BAG_UI_SIZE["command"]
     sprite = IconSprite.new(@viewport)
-    # Built as a private (load -> copy -> draw) bitmap, NOT via setBitmap -
+    # Built as a private (load -> copy -> draw) bitmap, not via setBitmap -
     # item_command.png is also loaded by the real bagUI_command button
-    # (pbDrawBagCommandButton), and the two turned out to share a cached
-    # Bitmap object when both used setBitmap directly: baking "USE" onto
-    # this one was silently bleeding onto "LAST ITEM USED"'s bitmap too
+    # (pbDrawBagCommandButton), and the two share a cached Bitmap object
+    # when both use setBitmap directly: baking "USE" onto this one would
+    # silently bleed onto "LAST ITEM USED"'s bitmap too
     # (and vice versa). A private copy has no such connection.
     base = Bitmap.new(Settings::CUSTOM_BATTLE_UI_GRAPHICS_PATH + BAG_UI_FILES["command"] + ".png")
     bmp = Bitmap.new(base.width, base.height)
@@ -3556,6 +4549,22 @@ class Battle::Scene
         break
       elsif confirmed
         pbPlayDecisionSE
+        # Poke Balls specifically, and only in a double battle - there are
+        # two possible foes to throw at, so the target window is needed.
+        # This page closes FIRST (its own normal exit animation), THEN the
+        # target window comes up - never layered on top of each other.
+        if pbUseItemIsDoubleBattleBall?(category)
+          pbHideUseItemPage
+          target = pbChooseBallTarget
+          if target < 0
+            # Cancelled the target picker - back to this same page, the
+            # same entrance it used the first time (its own exit already
+            # played, so this needs its own re-entrance to match).
+            pbShowUseItemPage(category, item_id)
+            break
+          end
+          throw :bagItemUsed, item_id
+        end
         # Does NOT call pbSetLastUsedItem here - the battle engine hasn't
         # actually accepted this item yet at this point (that only
         # happens once pbItemMenu's yield returns true). Marking it as the
@@ -3571,6 +4580,84 @@ class Battle::Scene
         break
       end
     end
+  end
+
+  # Poke Balls only ever need a target picker when there's more than one
+  # possible foe to throw at - a double battle. category is the pocket key
+  # ("hp"/"restore"/"balls"/"battle") pbShowBagPocket was opened with; nil
+  # (the item_command shortcut) never applies here since that only ever
+  # re-uses whatever was last used, which by definition already went
+  # through this check once.
+  def pbUseItemIsDoubleBattleBall?(category)
+    return category == "balls" && !@battle.singleBattle?
+  end
+
+  # Target picker for throwing a Poke Ball in a double battle - the same
+  # window pbChooseTarget uses for moves, just restricted to the two foe
+  # panels (a ball never has anything to do with your own party's panels,
+  # so those are only shown for the field context, never selectable here).
+  # Returns the chosen battler index, or -1 on cancel.
+  def pbChooseBallTarget
+    eligible = TARGET_PANEL_KEYS.select do |key|
+      next false if !key.start_with?("enemy")
+      idx = TARGET_PANEL_BATTLER_INDEX[key]
+      idx && idx < @battle.battlers.length && @battle.battlers[idx] && !@battle.battlers[idx].fainted?
+    end
+    return -1 if eligible.empty?
+    if eligible.length == 1
+      @lastBallTargetIdx = TARGET_PANEL_BATTLER_INDEX[eligible.first]
+      return @lastBallTargetIdx
+    end
+    currentKey = eligible.first
+    pbShowTargetPanels(currentKey, false)
+    result = -1
+    loop do
+      pbUpdate
+      dRow = 0
+      dCol = 0
+      if Input.trigger?(Input::UP)
+        dRow = -1
+      elsif Input.trigger?(Input::DOWN)
+        dRow = 1
+      elsif Input.trigger?(Input::LEFT)
+        dCol = -1
+      elsif Input.trigger?(Input::RIGHT)
+        dCol = 1
+      end
+      newKey = pbTargetPanelNextKey(currentKey, dRow, dCol, eligible)
+      if newKey != currentKey
+        pbPlayCursorSE
+        currentKey = newKey
+        pbUpdateTargetPanelOpacity(currentKey, false)
+      end
+      mouseClicked = Mouse.active? && Mouse.click?
+      clickedKey = nil
+      if mouseClicked
+        eligible.each do |key|
+          sprite = @sprites["targetPanel_#{key}"]
+          clickedKey = key if sprite && Mouse.over?(sprite)
+        end
+        clickedKey = "cancel" if @sprites["bagUI_cancel"] && Mouse.over?(@sprites["bagUI_cancel"])
+      end
+      if clickedKey && clickedKey != currentKey
+        currentKey = clickedKey
+        pbUpdateTargetPanelOpacity(currentKey, false)
+      end
+      confirmed = Input.trigger?(Input::USE) || clickedKey
+      if (confirmed && currentKey == "cancel") || Input.trigger?(Input::BACK)
+        pbPlayCancelSE
+        pbFlashBagCancelButton
+        result = -1
+        break
+      elsif confirmed
+        pbPlayDecisionSE
+        result = TARGET_PANEL_BATTLER_INDEX[currentKey]
+        @lastBallTargetIdx = result
+        break
+      end
+    end
+    pbHideTargetPanels
+    return result
   end
 
   # Whether a given Bag grid cell can be selected at all - item_command is
@@ -3712,11 +4799,18 @@ class Battle::Scene
     # (it doesn't know Bag is about to take over the screen), so they need
     # hiding again here for as long as this custom UI is up - restored at
     # the very end, same bracket pbCommandMenuEx uses for its own portion.
+    # Snapshot this BEFORE pbHideCommandButtons runs below, same reasoning
+    # as pbFightMenu - that call resets @cmdCancelWanted to false as a side
+    # effect (it hides the Command menu's own cancel button too, if it was
+    # showing), so the tail's "was this the second Pokemon of a double
+    # battle" check needs to read it before that happens.
+    wasSecondBattlerOfDouble = @cmdCancelWanted
     pbHideDataBoxes
     pbHideCommandButtons
     pbScrollMessageBoxOut
     registered = false
     loop do
+      @lastBallTargetIdx = nil   # cleared per item, so a stale pick never leaks into an unrelated one
       item_id = pbShowBagUI   # blocks until the player backs out, or confirms USE on an item
       break if !item_id
       item = GameData::Item.get(item_id)
@@ -3725,17 +4819,29 @@ class Battle::Scene
       idxMove = -1
       case useType
       when 1, 3
-        idxPkmn = @battle.battlers[idxBattler].pokemonIndex
+        # HP/PP restore, status restore, and battle item pockets all pick a
+        # target from the Party page now, rather than always defaulting to
+        # whichever Pokemon is currently out - -1 (cancelled picking a
+        # target) falls through to the idxPkmn < 0 guard below, same as any
+        # other rejected choice.
+        idxPkmn = pbChooseItemTargetPokemon(_INTL("Use {1} on who?", item.name))
       when 4
         opponents = @battle.allOtherSideBattlers(idxBattler)
-        idxPkmn = opponents[0].index if opponents.length == 1
+        if opponents.length == 1
+          idxPkmn = opponents[0].index
+        elsif @lastBallTargetIdx && opponents.any? { |b| b.index == @lastBallTargetIdx }
+          # Double battle - pbUseItemMenuLoop already ran the target window
+          # (pbChooseBallTarget) for a Poke Ball before throwing it, so the
+          # chosen foe is sitting in @lastBallTargetIdx.
+          idxPkmn = @lastBallTargetIdx
+        end
       when 5
         idxPkmn = idxBattler
       end
       if idxPkmn < 0
-        # Not supported by this UI yet (multi-target Poké Ball, Ether, etc.)
-        # - a real message box may still have appeared while working that
-        # out, so clear it before showing the Bag page again.
+        # Not supported by this UI yet (multi-target non-Ball items like
+        # Ether, etc.) - a real message box may still have appeared while
+        # working that out, so clear it before showing the Bag page again.
         pbHideMessageBox
         next
       end
@@ -3756,9 +4862,1061 @@ class Battle::Scene
       # the Bag page when it reopens.
       pbHideMessageBox
     end
-    pbHideCommandPageAssets if registered
+    if registered && (@battle.singleBattle? || wasSecondBattlerOfDouble)
+      # Item accepted and there's nobody else left to act this round - close
+      # the whole Command page, same as Fight/Run.
+      pbHideCommandPageAssets
+    elsif registered
+      # Item accepted, but this was the FIRST Pokemon of a double battle's
+      # turn - the second Pokemon still needs Fight/Bag/Pokemon/Run (which
+      # might itself be a move, or another Poke Ball), so this just returns
+      # to the Command menu rather than tearing the whole page down.
+      pbShowCommandButtons("fight")
+    end
     pbShowDataBoxes
     return registered
+  end
+
+  # Party page - replaces the default Essentials party screen. Whether a
+  # given slot actually has a Pokemon in it - fainted still counts as
+  # occupied (party_slot_active), only a genuinely empty party slot gets
+  # party_slot_empty and is skipped by navigation/clicks. Validating whether
+  # THIS particular Pokemon is a legal choice (already active, fainted and
+  # unusable, etc.) is the base engine's job, not this page's.
+  def pbPartySlotEnabled?(key)
+    idx = PARTY_SLOT_KEYS.index(key)
+    return false if !idx
+    party = @battle.pbParty(0)
+    return party[idx] ? true : false
+  end
+
+  # Subpixel-safe centering on both axes - same fail-safe idiom
+  # pbDrawBattlerIcon already uses for its (x-only) name centering, extended
+  # to y as well for the HP number on the Party page.
+  def pbDrawCenteredText(bmp, text, centerX, centerY, color, shadow)
+    size = bmp.text_size(text)
+    left_x = centerX - (size.width / 2)
+    left_x -= 1 if left_x.odd?
+    top_y = centerY - (size.height / 2)
+    top_y -= 1 if top_y.odd?
+    pbDrawTextPositions(bmp, [[text, left_x, top_y, :left, color, shadow]])
+  end
+
+  # Builds/rebakes all six slot buttons - background (active/empty, never
+  # sel at build time since nothing's highlighted yet until
+  # pbUpdatePartyMenuOpacity runs) plus, for occupied slots, the baked name/
+  # gender/level/HP content. Rebuilt every time the page opens, same
+  # reasoning as everywhere else in this file. Also (re)builds the six
+  # animated Pokemon icon sprites.
+  def pbBuildPartySlotButtons
+    party = @battle.pbParty(0)
+    PARTY_SLOT_KEYS.each_with_index do |key, idx|
+      spriteKey = "partySlot_#{key}"
+      if !@sprites[spriteKey]
+        @sprites[spriteKey] = IconSprite.new(@viewport)
+        @sprites[spriteKey].z = Z_COMMAND_BUTTON
+        @sprites[spriteKey].x, @sprites[spriteKey].y = PARTY_SLOT_POS[key]
+        @sprites[spriteKey].opacity = 0
+        @sprites[spriteKey].visible = false
+      end
+      pbDrawPartySlot(key, party[idx], false)
+    end
+    pbBuildPartyIcons(party)
+  end
+
+  # (Re)bakes one slot's own bitmap - background graphic (active/sel per
+  # `selected`, or empty if there's no Pokemon here) plus, when occupied,
+  # the name/gender/level/HP overlay content. Never mutates the cached
+  # background Bitmap directly (same private-bitmap idiom as everywhere
+  # else in this file) since the same background files are shared across
+  # all six slots.
+  def pbDrawPartySlot(key, pkmn, selected)
+    sprite = @sprites["partySlot_#{key}"]
+    return if !sprite
+    file = pkmn ? (selected ? PARTY_SLOT_SEL_FILE : PARTY_SLOT_ACTIVE_FILE) : PARTY_SLOT_EMPTY_FILE
+    base = Bitmap.new(PARTY_GRAPHICS_PATH + file + ".png")
+    bmp = Bitmap.new(base.width, base.height)
+    bmp.blt(0, 0, base, base.rect)
+    base.dispose
+    if pkmn
+      pbSetSystemFont(bmp)
+      texts = [[pkmn.name, PARTY_NAME_POS[0], PARTY_NAME_POS[1], :left, BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR]]
+      if pkmn.gender != 2   # 0 = male, 1 = female, 2 = genderless (no symbol)
+        genderText  = (pkmn.gender == 0) ? "♂" : "♀"
+        genderColor = (pkmn.gender == 0) ? SUMMARY_GENDER_MALE_COLOR : SUMMARY_GENDER_FEMALE_COLOR
+        texts << [genderText, PARTY_GENDER_POS[0], PARTY_GENDER_POS[1], :left, genderColor, BAG_UI_TEXT_SHADOW_COLOR]
+      end
+      texts << ["Lv.#{pkmn.level}", PARTY_LEVEL_POS[0], PARTY_LEVEL_POS[1], :left, BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR]
+      pbDrawTextPositions(bmp, texts)
+
+      frame = Bitmap.new(FIGHT_SUMMARY_GRAPHICS_PATH + PARTY_HP_OVERLAY_FILE + ".png")
+      bmp.blt(PARTY_HP_OVERLAY_POS[0], PARTY_HP_OVERLAY_POS[1], frame, frame.rect)
+      frame.dispose
+
+      hpFraction = pbBattlerHPFraction(pkmn)
+      hpBase = Bitmap.new(PARTY_GRAPHICS_PATH + PARTY_HP_BAR_FILE + ".png")
+      hpRow = (hpFraction > 0.5) ? 0 : (hpFraction > 0.2) ? 1 : 2
+      hpWidth = (hpBase.width * hpFraction).round
+      if hpWidth > 0
+        bmp.blt(PARTY_HP_BAR_POS[0], PARTY_HP_BAR_POS[1], hpBase, Rect.new(0, hpRow * 4, hpWidth, 4))
+      end
+      hpBase.dispose
+
+      pbDrawCenteredText(bmp, "#{pkmn.hp}/#{pkmn.totalhp}", PARTY_HP_TEXT_CENTER[0], PARTY_HP_TEXT_CENTER[1],
+                          BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR)
+    end
+    sprite.bitmap&.dispose
+    sprite.bitmap = bmp
+  end
+
+  # Six animated Pokemon icons (real PokemonIconSprite, same class as the
+  # Summary panel's own icon - keeps its bounce/blink animation running via
+  # pbAnimatePartyIcons), one per occupied slot, positioned exactly on that
+  # slot's own xy (PARTY_ICON_OFFSET is [0,0] but kept as a named constant
+  # for consistency/future tweaking).
+  def pbBuildPartyIcons(party)
+    PARTY_SLOT_KEYS.each_with_index do |key, idx|
+      spriteKey = "partyIcon_#{key}"
+      @sprites[spriteKey]&.dispose
+      @sprites[spriteKey] = nil
+      pkmn = party[idx]
+      next if !pkmn
+      pos = PARTY_SLOT_POS[key]
+      @sprites[spriteKey] = PokemonIconSprite.new(pkmn, @viewport)
+      icon = @sprites[spriteKey]
+      icon.x = pos[0] + PARTY_ICON_OFFSET[0]
+      icon.y = pos[1] + PARTY_ICON_OFFSET[1]
+      icon.z = Z_COMMAND_BUTTON + 1
+      icon.opacity = 0
+      icon.visible = false
+    end
+  end
+
+  def pbPartyIconSprites
+    return PARTY_SLOT_KEYS.filter_map { |key| @sprites["partyIcon_#{key}"] }
+  end
+
+  # Steps every party icon's own bounce/blink animation - same idea as
+  # pbAnimateSummaryPanelIcon/pbAnimateMovesPanelIcon, just six of them.
+  def pbAnimatePartyIcons
+    PARTY_SLOT_KEYS.each do |key|
+      icon = @sprites["partyIcon_#{key}"]
+      icon.update if icon && icon.visible
+    end
+  end
+
+  # All six slot sprites, in key order - used for the fade cascade.
+  def pbPartySlotSprites
+    return PARTY_SLOT_KEYS.filter_map { |key| @sprites["partySlot_#{key}"] }
+  end
+
+  def pbUpdatePartyMenuOpacity(selectedKey)
+    party = @battle.pbParty(0)
+    PARTY_SLOT_KEYS.each do |key|
+      sprite = @sprites["partySlot_#{key}"]
+      next if !sprite
+      idx = PARTY_SLOT_KEYS.index(key)
+      pbDrawPartySlot(key, party[idx], key == selectedKey)
+      sprite.opacity = (key == selectedKey) ? CMD_BUTTON_OPACITY_SELECTED : CMD_BUTTON_OPACITY_NORMAL
+    end
+    cancel = @sprites["bagUI_cancel"]
+    cancel.opacity = (selectedKey == "cancel") ? CMD_BUTTON_OPACITY_SELECTED : CMD_BUTTON_OPACITY_NORMAL if cancel
+    pbUpdatePartyMenuSelector(selectedKey)
+  end
+
+  # The floating move_sel-style glow (PARTY_MENU_SEL_FILE) for a slot,
+  # cancel's own Bag UI highlight for cancel. Distinct from the slot's own
+  # active/sel background swap, which
+  # pbUpdatePartyMenuOpacity/pbDrawPartySlot own.
+  def pbUpdatePartyMenuSelector(selectedKey)
+    if !@sprites["partyMenuSel"]
+      @sprites["partyMenuSel"] = IconSprite.new(@viewport)
+      @sprites["partyMenuSel"].visible = false
+      @partyMenuSelFile  = nil
+      @partyMenuSelFrame = 0
+      @partyMenuSelTick  = 0
+    end
+    sel = @sprites["partyMenuSel"]
+    file = (selectedKey == "cancel") ? FIGHT_SEL_FILES["cancel"] : PARTY_MENU_SEL_FILE
+    if @partyMenuSelFile != file
+      sel.setBitmap(Settings::CUSTOM_BATTLE_UI_GRAPHICS_PATH + file + ".png")
+      frameHeight = sel.bitmap.height / FIGHT_SEL_FRAMES
+      sel.src_rect.set(0, 0, sel.bitmap.width, frameHeight)
+      @partyMenuSelFile  = file
+      @partyMenuSelFrame = 0
+      @partyMenuSelTick  = 0
+    end
+    pos = (selectedKey == "cancel") ? BAG_UI_POS["cancel"] : PARTY_SLOT_POS[selectedKey]
+    offset = (selectedKey == "cancel") ? FIGHT_SEL_OFFSET["cancel"] : PARTY_MENU_SEL_OFFSET
+    sel.x = pos[0] + offset[0]
+    sel.y = pos[1] + offset[1]
+    @partyMenuSelKey = selectedKey
+    sel.z = (selectedKey == "cancel") ? Z_BAG_POCKET_ARROW + 1 : Z_COMMAND_SELECTOR
+    sel.opacity = 255
+    sel.visible = true
+  end
+
+  def pbAnimatePartyMenuSelector
+    sel = @sprites["partyMenuSel"]
+    return if !sel || !sel.visible
+    @partyMenuSelTick += 1
+    return if @partyMenuSelTick < SEL_ANIM_SPEED
+    @partyMenuSelTick = 0
+    frameHeight = sel.bitmap.height / FIGHT_SEL_FRAMES
+    @partyMenuSelFrame = (@partyMenuSelFrame + 1) % FIGHT_SEL_FRAMES
+    sel.src_rect.y = @partyMenuSelFrame * frameHeight
+  end
+
+  # Non-wrapping 2x3 grid nav, skipping any genuinely empty slot - same
+  # style as pbFightNextKey/pbMovesPanelNextKey. Down from the bottom row
+  # reaches cancel; Up from cancel returns to whichever slot was last
+  # selected via the keyboard (@partyMenuLastSlotKey - mouse clicks never
+  # touch it), or the first occupied slot if nothing's been picked yet.
+  def pbPartyMenuNextKey(currentKey, dRow, dCol)
+    if currentKey == "cancel"
+      return currentKey if dRow != -1
+      return @partyMenuLastSlotKey if @partyMenuLastSlotKey && pbPartySlotEnabled?(@partyMenuLastSlotKey)
+      return PARTY_SLOT_KEYS.find { |key| pbPartySlotEnabled?(key) } || currentKey
+    end
+    pos = PARTY_SLOT_GRID[currentKey]
+    return currentKey if !pos
+    row, col = pos
+    if dCol != 0
+      partnerKey = PARTY_SLOT_GRID.key([row, col + dCol])
+      return (partnerKey && pbPartySlotEnabled?(partnerKey)) ? partnerKey : currentKey
+    elsif dRow != 0
+      partnerKey = PARTY_SLOT_GRID.key([row + dRow, col])
+      # Pressing Down drops straight to cancel not just off the bottom row,
+      # but also whenever the slot below is genuinely empty (no partnerKey,
+      # or one that exists but isn't enabled) - same "skip disabled cell"
+      # convention as everywhere else, just landing on cancel instead of
+      # getting stuck.
+      return "cancel" if dRow == 1 && (!partnerKey || !pbPartySlotEnabled?(partnerKey))
+      return (partnerKey && pbPartySlotEnabled?(partnerKey)) ? partnerKey : currentKey
+    end
+    return currentKey
+  end
+
+  # Entrance - cancel slides in from the right (borrowed Bag UI cancel, same
+  # as everywhere else) and the message box scrolls up with "Choose a
+  # Pokemon", both alongside the six slot buttons fading in place (same
+  # size as pokemon_panel_field.png, so a plain fade is enough - no slide
+  # needed). Called after pbHideCommandButtons + pbScrollMessageBoxOut have
+  # already taken the Command buttons/icon boxes/message box off screen.
+  def pbShowPartyMenu(selectedKey, promptText = PARTY_PROMPT_TEXT)
+    pbBuildBagUI   # make sure bagUI_cancel exists even if Bag/Fight haven't opened yet this battle
+    pbBuildPartySlotButtons
+    pbSEPlay("SlideUp", 60)
+
+    box = @sprites["messageBox"]
+    boxRestY = MESSAGE_REST_Y
+    if box
+      box.x = 0
+      box.y = boxRestY + MESSAGE_SCROLL_OFFSET
+      box.visible = true
+    end
+
+    cancel = @sprites["bagUI_cancel"]
+    cancelPos = BAG_UI_POS["cancel"]
+    cancel.z = Z_BAG_POCKET_ARROW
+    cancel.x = Graphics.width
+    cancel.y = cancelPos[1]
+    cancel.opacity = 0
+    cancel.visible = true
+
+    slotSprites = pbPartySlotSprites
+    slotSprites.each { |sprite| sprite.opacity = 0; sprite.visible = true }
+    iconSprites = pbPartyIconSprites
+    iconSprites.each { |sprite| sprite.opacity = 0; sprite.visible = true }
+
+    pbUpdatePartyMenuSelector(selectedKey)
+    sel = @sprites["partyMenuSel"]
+    selRestX = sel.x
+    slideSelWithCancel = (selectedKey == "cancel")
+    sel.x = Graphics.width + FIGHT_SEL_OFFSET["cancel"][0] if slideSelWithCancel
+    sel.opacity = 0
+
+    MESSAGE_SCROLL_FRAMES.times do |frame|
+      progress = (frame + 1) / MESSAGE_SCROLL_FRAMES.to_f
+      box.y = boxRestY + (MESSAGE_SCROLL_OFFSET * (1 - progress)) if box
+      cancel.x = Graphics.width + ((cancelPos[0] - Graphics.width) * progress)
+      cancel.opacity = (255 * progress).to_i
+      slotSprites.each { |sprite| sprite.opacity = (CMD_BUTTON_OPACITY_NORMAL * progress).to_i }
+      iconSprites.each { |sprite| sprite.opacity = (255 * progress).to_i }
+      if slideSelWithCancel
+        sel.x = (Graphics.width + FIGHT_SEL_OFFSET["cancel"][0]) +
+                ((selRestX - (Graphics.width + FIGHT_SEL_OFFSET["cancel"][0])) * progress)
+      end
+      sel.opacity = (255 * progress).to_i
+      pbUpdate
+    end
+    box.y = boxRestY if box
+    cancel.x = cancelPos[0]
+    slotSprites.each { |sprite| sprite.opacity = CMD_BUTTON_OPACITY_NORMAL }
+    iconSprites.each { |sprite| sprite.opacity = 255 }
+    sel.x = selRestX
+    sel.opacity = 255
+    pbUpdatePartyMenuOpacity(selectedKey)
+    pbSetMessageWindowText(promptText)
+  end
+
+  # Reverse of pbShowPartyMenu.
+  def pbHidePartyMenu
+    pbSEPlay("SlideDown", 60)
+    if @sprites["messageWindow"]
+      @sprites["messageWindow"].text = ""
+      @sprites["messageWindow"].visible = false
+    end
+    box = @sprites["messageBox"]
+    boxRestY = MESSAGE_REST_Y
+    cancel = @sprites["bagUI_cancel"]
+    cancelPos = BAG_UI_POS["cancel"]
+    cancelStartOpacity = cancel ? cancel.opacity : 0
+    slotSprites = pbPartySlotSprites
+    slotStartOpacity = {}
+    slotSprites.each { |sprite| slotStartOpacity[sprite] = sprite.opacity }
+    iconSprites = pbPartyIconSprites
+    iconStartOpacity = {}
+    iconSprites.each { |sprite| iconStartOpacity[sprite] = sprite.opacity }
+    sel = @sprites["partyMenuSel"]
+    selStartOpacity = sel ? sel.opacity : 0
+    selStartX = sel ? sel.x : nil
+    selBoundToCancel = sel && @partyMenuSelKey == "cancel"
+    MESSAGE_SCROLL_FRAMES.times do |frame|
+      progress = (frame + 1) / MESSAGE_SCROLL_FRAMES.to_f
+      box.y = boxRestY + (MESSAGE_SCROLL_OFFSET * progress) if box
+      if cancel
+        cancel.x = cancelPos[0] + ((Graphics.width - cancelPos[0]) * progress)
+        cancel.opacity = (cancelStartOpacity * (1 - progress)).to_i
+      end
+      slotSprites.each { |sprite| sprite.opacity = (slotStartOpacity[sprite] * (1 - progress)).to_i }
+      iconSprites.each { |sprite| sprite.opacity = (iconStartOpacity[sprite] * (1 - progress)).to_i }
+      if sel
+        if selBoundToCancel
+          sel.x = selStartX + (((Graphics.width + FIGHT_SEL_OFFSET["cancel"][0]) - selStartX) * progress)
+        end
+        sel.opacity = (selStartOpacity * (1 - progress)).to_i
+      end
+      pbUpdate
+    end
+    box.visible = false if box
+    if cancel
+      cancel.visible = false
+      cancel.z = Z_BAG_UI
+    end
+    slotSprites.each { |sprite| sprite.visible = false }
+    iconSprites.each { |sprite| sprite.visible = false }
+    sel.visible = false if sel
+  end
+
+  # Builds/rebakes the summary + check_moves buttons for the Party page's
+  # action menu - reuses the exact same graphics the Fight page's own
+  # summary/check_moves buttons use, just at this page's own positions.
+  # Also makes sure bagUI_cancel exists, same defensive call as everywhere
+  # else that borrows it.
+  def pbBuildPartyActionButtons(pkmn)
+    pbBuildBagUI
+    if !@sprites["partyAction_shift"]
+      @sprites["partyAction_shift"] = IconSprite.new(@viewport)
+      @sprites["partyAction_shift"].z = Z_COMMAND_BUTTON
+      @sprites["partyAction_shift"].x, @sprites["partyAction_shift"].y = PARTY_SHIFT_POS
+      @sprites["partyAction_shift"].opacity = 0
+      @sprites["partyAction_shift"].visible = false
+    end
+    pbDrawPartyShiftContent(pkmn)
+    pbBuildPartyShiftIcon(pkmn)
+    if !@sprites["partyAction_summary"]
+      @sprites["partyAction_summary"] = IconSprite.new(@viewport)
+      @sprites["partyAction_summary"].setBitmap(FIGHT_SUMMARY_GRAPHICS_PATH + FIGHT_SUMMARY_FILE + ".png")
+      @sprites["partyAction_summary"].z = Z_COMMAND_BUTTON
+      @sprites["partyAction_summary"].x, @sprites["partyAction_summary"].y = PARTY_SUMMARY_POS
+      @sprites["partyAction_summary"].opacity = 0
+      @sprites["partyAction_summary"].visible = false
+    end
+    if !@sprites["partyAction_check_moves"]
+      @sprites["partyAction_check_moves"] = IconSprite.new(@viewport)
+      @sprites["partyAction_check_moves"].setBitmap(FIGHT_SUMMARY_GRAPHICS_PATH + FIGHT_CHECK_MOVES_FILE + ".png")
+      @sprites["partyAction_check_moves"].z = Z_COMMAND_BUTTON
+      @sprites["partyAction_check_moves"].x, @sprites["partyAction_check_moves"].y = PARTY_CHECK_MOVES_POS
+      @sprites["partyAction_check_moves"].opacity = 0
+      @sprites["partyAction_check_moves"].visible = false
+    end
+  end
+
+  # Whether this Pokemon is currently out on the field (fainted battlers
+  # don't count - a fainted active Pokemon still needs to be offered as a
+  # switch target, not shown as "IN BATTLE").
+  def pbPartyPokemonActive?(pkmn)
+    return @battle.battlers.any? { |b| b && !b.fainted? && b.pokemon == pkmn }
+  end
+
+  # (Re)bakes the shift button's own bitmap - background graphic, the
+  # selected Pokemon's name + gender symbol as one centered block at
+  # PARTY_SHIFT_NAME_GENDER_Y, and the IN BATTLE/SWITCH state label centered
+  # at PARTY_SHIFT_STATE_Y. Both lines centered against PARTY_SHIFT_WIDTH
+  # via the same subpixel-safe idiom pbDrawCenteredText uses, just x-only
+  # here (the y values are spec'd directly, not auto-centered).
+  def pbDrawPartyShiftContent(pkmn)
+    sprite = @sprites["partyAction_shift"]
+    return if !sprite
+    base = Bitmap.new(FIGHT_SUMMARY_GRAPHICS_PATH + PARTY_SHIFT_FILE + ".png")
+    bmp = Bitmap.new(base.width, base.height)
+    bmp.blt(0, 0, base, base.rect)
+    base.dispose
+    pbSetSystemFont(bmp)
+    centerX = PARTY_SHIFT_WIDTH / 2
+
+    nameText = pkmn.name
+    genderText = (pkmn.gender != 2) ? ((pkmn.gender == 0) ? " ♂" : " ♀") : ""
+    genderColor = (pkmn.gender == 0) ? SUMMARY_GENDER_MALE_COLOR : SUMMARY_GENDER_FEMALE_COLOR
+    nameWidth = bmp.text_size(nameText).width
+    genderWidth = genderText.empty? ? 0 : bmp.text_size(genderText).width
+    totalWidth = nameWidth + genderWidth
+    left_x = centerX - (totalWidth / 2)
+    left_x -= 1 if left_x.odd?
+    texts = [[nameText, left_x, PARTY_SHIFT_NAME_GENDER_Y, :left, BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR]]
+    if !genderText.empty?
+      texts << [genderText, left_x + nameWidth, PARTY_SHIFT_NAME_GENDER_Y, :left, genderColor, BAG_UI_TEXT_SHADOW_COLOR]
+    end
+
+    stateText = pbPartyPokemonActive?(pkmn) ? "IN BATTLE" : "SWITCH"
+    stateWidth = bmp.text_size(stateText).width
+    state_x = centerX - (stateWidth / 2)
+    state_x -= 1 if state_x.odd?
+    texts << [stateText, state_x, PARTY_SHIFT_STATE_Y, :left, BAG_UI_TEXT_COLOR, BAG_UI_TEXT_SHADOW_COLOR]
+
+    pbDrawTextPositions(bmp, texts)
+    sprite.bitmap&.dispose
+    sprite.bitmap = bmp
+  end
+
+  # Animated PokemonIconSprite for the shift button - same bounce/blink
+  # convention as everywhere else, positioned at PARTY_SHIFT_POS +
+  # PARTY_SHIFT_ICON_POS (relative to the button's own top-left).
+  def pbBuildPartyShiftIcon(pkmn)
+    @sprites["partyActionShiftIcon"]&.dispose
+    @sprites["partyActionShiftIcon"] = PokemonIconSprite.new(pkmn, @viewport)
+    icon = @sprites["partyActionShiftIcon"]
+    icon.x = PARTY_SHIFT_POS[0] + PARTY_SHIFT_ICON_POS[0]
+    icon.y = PARTY_SHIFT_POS[1] + PARTY_SHIFT_ICON_POS[1]
+    icon.z = Z_COMMAND_BUTTON + 1
+    icon.opacity = 0
+    icon.visible = false
+  end
+
+  def pbAnimatePartyShiftIcon
+    icon = @sprites["partyActionShiftIcon"]
+    icon.update if icon && icon.visible
+  end
+
+  def pbUpdatePartyActionOpacity(selectedKey)
+    shift = @sprites["partyAction_shift"]
+    shift.opacity = (selectedKey == "shift") ? CMD_BUTTON_OPACITY_SELECTED : CMD_BUTTON_OPACITY_NORMAL if shift
+    summary = @sprites["partyAction_summary"]
+    summary.opacity = (selectedKey == "summary") ? CMD_BUTTON_OPACITY_SELECTED : CMD_BUTTON_OPACITY_NORMAL if summary
+    checkMoves = @sprites["partyAction_check_moves"]
+    checkMoves.opacity = (selectedKey == "check_moves") ? CMD_BUTTON_OPACITY_SELECTED : CMD_BUTTON_OPACITY_NORMAL if checkMoves
+    cancel = @sprites["bagUI_cancel"]
+    cancel.opacity = (selectedKey == "cancel") ? CMD_BUTTON_OPACITY_SELECTED : CMD_BUTTON_OPACITY_NORMAL if cancel
+    pbUpdatePartyActionSelector(selectedKey)
+  end
+
+  # shift/summary/check_moves all reuse the same selector graphic/offset the
+  # Fight page's own summary button uses; cancel reuses the Bag UI's own
+  # highlight - same idea as pbUpdateSummaryPanelSelector.
+  def pbUpdatePartyActionSelector(selectedKey)
+    if !@sprites["partyActionSel"]
+      @sprites["partyActionSel"] = IconSprite.new(@viewport)
+      @sprites["partyActionSel"].visible = false
+      @partyActionSelFile  = nil
+      @partyActionSelFrame = 0
+      @partyActionSelTick  = 0
+    end
+    sel = @sprites["partyActionSel"]
+    file = case selectedKey
+           when "cancel" then FIGHT_SEL_FILES["cancel"]
+           when "shift"  then PARTY_SHIFT_SEL_FILE
+           else FIGHT_SEL_FILES["summary"]
+           end
+    path = (selectedKey == "cancel") ? Settings::CUSTOM_BATTLE_UI_GRAPHICS_PATH : FIGHT_SUMMARY_GRAPHICS_PATH
+    if @partyActionSelFile != file
+      sel.setBitmap(path + file + ".png")
+      frameHeight = sel.bitmap.height / FIGHT_SEL_FRAMES
+      sel.src_rect.set(0, 0, sel.bitmap.width, frameHeight)
+      @partyActionSelFile  = file
+      @partyActionSelFrame = 0
+      @partyActionSelTick  = 0
+    end
+    pos = case selectedKey
+          when "cancel"  then BAG_UI_POS["cancel"]
+          when "shift"   then PARTY_SHIFT_POS
+          when "summary" then PARTY_SUMMARY_POS
+          else PARTY_CHECK_MOVES_POS
+          end
+    offset = case selectedKey
+             when "cancel" then FIGHT_SEL_OFFSET["cancel"]
+             when "shift"  then PARTY_SHIFT_SEL_OFFSET
+             else FIGHT_SEL_OFFSET["summary"]
+             end
+    sel.x = pos[0] + offset[0]
+    sel.y = pos[1] + offset[1]
+    @partyActionSelKey = selectedKey
+    sel.z = (selectedKey == "cancel") ? Z_BAG_POCKET_ARROW + 1 : Z_COMMAND_SELECTOR
+    sel.opacity = 255
+    sel.visible = true
+  end
+
+  def pbAnimatePartyActionSelector
+    sel = @sprites["partyActionSel"]
+    return if !sel || !sel.visible
+    @partyActionSelTick += 1
+    return if @partyActionSelTick < SEL_ANIM_SPEED
+    @partyActionSelTick = 0
+    frameHeight = sel.bitmap.height / FIGHT_SEL_FRAMES
+    @partyActionSelFrame = (@partyActionSelFrame + 1) % FIGHT_SEL_FRAMES
+    sel.src_rect.y = @partyActionSelFrame * frameHeight
+  end
+
+  # Entrance for the action menu - called right after pbHidePartyMenu has
+  # already taken the slot list/message box/cancel off screen. Cancel and
+  # both buttons all fade/slide in together the same way pbShowSummaryPanel
+  # brings in check_moves + cancel on the Fight page.
+  def pbShowPartyActionMenu(selectedKey, pkmn)
+    pbBuildPartyActionButtons(pkmn)
+    pbSEPlay("SlideUp", 60)
+
+    shift = @sprites["partyAction_shift"]
+    shift.y = Graphics.height
+    shiftRestY = PARTY_SHIFT_POS[1]
+    shift.opacity = 0
+    shift.visible = true
+
+    shiftIcon = @sprites["partyActionShiftIcon"]
+    shiftIconRestY = PARTY_SHIFT_POS[1] + PARTY_SHIFT_ICON_POS[1]
+    shiftIcon.y = Graphics.height + PARTY_SHIFT_ICON_POS[1]
+    shiftIcon.opacity = 0
+    shiftIcon.visible = true
+
+    summary = @sprites["partyAction_summary"]
+    summary.y = Graphics.height
+    summaryRestY = PARTY_SUMMARY_POS[1]
+    summary.opacity = 0
+    summary.visible = true
+
+    checkMoves = @sprites["partyAction_check_moves"]
+    checkMoves.y = Graphics.height
+    checkMovesRestY = PARTY_CHECK_MOVES_POS[1]
+    checkMoves.opacity = 0
+    checkMoves.visible = true
+
+    cancel = @sprites["bagUI_cancel"]
+    cancelPos = BAG_UI_POS["cancel"]
+    cancel.z = Z_BAG_POCKET_ARROW
+    cancel.x = Graphics.width
+    cancel.y = cancelPos[1]
+    cancel.opacity = 0
+    cancel.visible = true
+
+    pbUpdatePartyActionSelector(selectedKey)
+    sel = @sprites["partyActionSel"]
+    selRestX = sel.x
+    selRestY = sel.y
+    slideSelWithCancel = (selectedKey == "cancel")
+    if slideSelWithCancel
+      sel.x = Graphics.width + FIGHT_SEL_OFFSET["cancel"][0]
+    else
+      sel.y = Graphics.height + FIGHT_SEL_OFFSET["summary"][1]
+    end
+    sel.opacity = 0
+
+    BAG_UI_SLIDE_FRAMES.times do |frame|
+      progress = (frame + 1) / BAG_UI_SLIDE_FRAMES.to_f
+      shift.y = Graphics.height + ((shiftRestY - Graphics.height) * progress)
+      shift.opacity = (255 * progress).to_i
+      shiftIcon.y = (Graphics.height + PARTY_SHIFT_ICON_POS[1]) + ((shiftIconRestY - (Graphics.height + PARTY_SHIFT_ICON_POS[1])) * progress)
+      shiftIcon.opacity = (255 * progress).to_i
+      summary.y = Graphics.height + ((summaryRestY - Graphics.height) * progress)
+      summary.opacity = (255 * progress).to_i
+      checkMoves.y = Graphics.height + ((checkMovesRestY - Graphics.height) * progress)
+      checkMoves.opacity = (255 * progress).to_i
+      cancel.x = Graphics.width + ((cancelPos[0] - Graphics.width) * progress)
+      cancel.opacity = (255 * progress).to_i
+      if slideSelWithCancel
+        sel.x = (Graphics.width + FIGHT_SEL_OFFSET["cancel"][0]) +
+                ((selRestX - (Graphics.width + FIGHT_SEL_OFFSET["cancel"][0])) * progress)
+      else
+        sel.y = (Graphics.height + FIGHT_SEL_OFFSET["summary"][1]) +
+                ((selRestY - (Graphics.height + FIGHT_SEL_OFFSET["summary"][1])) * progress)
+      end
+      sel.opacity = (255 * progress).to_i
+      pbUpdate
+    end
+    shift.y = shiftRestY
+    shiftIcon.y = shiftIconRestY
+    summary.y = summaryRestY
+    checkMoves.y = checkMovesRestY
+    cancel.x = cancelPos[0]
+    sel.x = selRestX
+    sel.y = selRestY
+    sel.opacity = 255
+    pbUpdatePartyActionOpacity(selectedKey)
+  end
+
+  # Reverse of pbShowPartyActionMenu.
+  def pbHidePartyActionMenu
+    pbSEPlay("SlideDown", 60)
+    shift = @sprites["partyAction_shift"]
+    shiftIcon = @sprites["partyActionShiftIcon"]
+    summary = @sprites["partyAction_summary"]
+    checkMoves = @sprites["partyAction_check_moves"]
+    cancel = @sprites["bagUI_cancel"]
+    shiftRestY = PARTY_SHIFT_POS[1]
+    shiftIconRestY = PARTY_SHIFT_POS[1] + PARTY_SHIFT_ICON_POS[1]
+    summaryRestY = PARTY_SUMMARY_POS[1]
+    checkMovesRestY = PARTY_CHECK_MOVES_POS[1]
+    cancelPos = BAG_UI_POS["cancel"]
+    shiftStartOpacity = shift ? shift.opacity : 0
+    shiftIconStartOpacity = shiftIcon ? shiftIcon.opacity : 0
+    summaryStartOpacity = summary ? summary.opacity : 0
+    checkMovesStartOpacity = checkMoves ? checkMoves.opacity : 0
+    cancelStartOpacity = cancel ? cancel.opacity : 0
+    sel = @sprites["partyActionSel"]
+    selStartOpacity = sel ? sel.opacity : 0
+    selStartX = sel ? sel.x : nil
+    selStartY = sel ? sel.y : nil
+    selBoundToCancel = sel && @partyActionSelKey == "cancel"
+    BAG_UI_SLIDE_FRAMES.times do |frame|
+      progress = (frame + 1) / BAG_UI_SLIDE_FRAMES.to_f
+      if shift
+        shift.y = shiftRestY + ((Graphics.height - shiftRestY) * progress)
+        shift.opacity = (shiftStartOpacity * (1 - progress)).to_i
+      end
+      if shiftIcon
+        shiftIcon.y = shiftIconRestY + (((Graphics.height + PARTY_SHIFT_ICON_POS[1]) - shiftIconRestY) * progress)
+        shiftIcon.opacity = (shiftIconStartOpacity * (1 - progress)).to_i
+      end
+      if summary
+        summary.y = summaryRestY + ((Graphics.height - summaryRestY) * progress)
+        summary.opacity = (summaryStartOpacity * (1 - progress)).to_i
+      end
+      if checkMoves
+        checkMoves.y = checkMovesRestY + ((Graphics.height - checkMovesRestY) * progress)
+        checkMoves.opacity = (checkMovesStartOpacity * (1 - progress)).to_i
+      end
+      if cancel
+        cancel.x = cancelPos[0] + ((Graphics.width - cancelPos[0]) * progress)
+        cancel.opacity = (cancelStartOpacity * (1 - progress)).to_i
+      end
+      if sel
+        if selBoundToCancel
+          sel.x = selStartX + (((Graphics.width + FIGHT_SEL_OFFSET["cancel"][0]) - selStartX) * progress)
+        else
+          sel.y = selStartY + (((Graphics.height + FIGHT_SEL_OFFSET["summary"][1]) - selStartY) * progress)
+        end
+        sel.opacity = (selStartOpacity * (1 - progress)).to_i
+      end
+      pbUpdate
+    end
+    shift.visible = false if shift
+    shiftIcon.visible = false if shiftIcon
+    summary.visible = false if summary
+    checkMoves.visible = false if checkMoves
+    if cancel
+      cancel.visible = false
+      cancel.z = Z_BAG_UI
+    end
+    sel.visible = false if sel
+  end
+
+  # Grid nav for the action menu - shift sits alone up top (1x1), summary/
+  # check_moves/cancel sit in a row underneath it (3x1). From shift: Left
+  # goes to summary, Down goes to check_moves, Right goes to cancel. Once on
+  # that bottom row, Left/Right cycles summary <-> check_moves <-> cancel
+  # (non-wrapping), and Up from any of the three returns to shift.
+  def pbPartyActionNextKey(currentKey, dRow, dCol)
+    if currentKey == "shift"
+      return "summary" if dCol == -1
+      return "cancel" if dCol == 1
+      return "check_moves" if dRow == 1
+      return currentKey
+    end
+    return "shift" if dRow == -1
+    row = ["summary", "check_moves", "cancel"]
+    idx = row.index(currentKey)
+    return currentKey if !idx
+    if dCol == -1
+      return idx > 0 ? row[idx - 1] : currentKey
+    elsif dCol == 1
+      return idx < row.length - 1 ? row[idx + 1] : currentKey
+    end
+    return currentKey
+  end
+
+  # Simple message-box popup used for the shift button's "already in battle"
+  # notice - reuses the same message box/window graphics everything else in
+  # this file uses (sits above the action menu buttons by z-order alone,
+  # same as it always does), scrolled in, held until the player acknowledges
+  # it, then scrolled back out.
+  def pbShowPartyAlreadyInBattleMessage(pkmn)
+    pbScrollMessageBoxIn(true)
+    pbSetMessageWindowText(_INTL("{1} is already in battle.", pkmn.name))
+    loop do
+      pbUpdate
+      break if Input.trigger?(Input::USE) || Input.trigger?(Input::BACK) || (Mouse.active? && Mouse.click?)
+    end
+    pbScrollMessageBoxOut
+  end
+
+  # Reached by confirming a Pokemon on the Party page's slot list. Returns
+  # the party index to switch to once shift is actually confirmed on a
+  # benched Pokemon, or nil if the player backed out via cancel without
+  # completing a switch (summary/check_moves both return here rather than
+  # closing anything).
+  def pbPartyActionMenu(pkmn)
+    currentKey = "shift"
+    pbShowPartyActionMenu(currentKey, pkmn)
+    result = nil
+    loop do
+      pbUpdate
+
+      dRow = 0
+      dCol = 0
+      if Input.trigger?(Input::UP)
+        dRow = -1
+      elsif Input.trigger?(Input::DOWN)
+        dRow = 1
+      elsif Input.trigger?(Input::LEFT)
+        dCol = -1
+      elsif Input.trigger?(Input::RIGHT)
+        dCol = 1
+      end
+      newKey = pbPartyActionNextKey(currentKey, dRow, dCol)
+      if newKey != currentKey
+        pbPlayCursorSE
+        currentKey = newKey
+        pbUpdatePartyActionOpacity(currentKey)
+      end
+
+      mouseClicked = Mouse.active? && Mouse.click?
+      clickedKey = nil
+      if mouseClicked
+        clickedKey = "shift" if @sprites["partyAction_shift"] && Mouse.over?(@sprites["partyAction_shift"])
+        clickedKey = "summary" if @sprites["partyAction_summary"] && Mouse.over?(@sprites["partyAction_summary"])
+        clickedKey = "check_moves" if @sprites["partyAction_check_moves"] && Mouse.over?(@sprites["partyAction_check_moves"])
+        clickedKey = "cancel" if @sprites["bagUI_cancel"] && Mouse.over?(@sprites["bagUI_cancel"])
+      end
+      if clickedKey && clickedKey != currentKey
+        currentKey = clickedKey
+        pbUpdatePartyActionOpacity(currentKey)
+      end
+      confirmed = Input.trigger?(Input::USE) || clickedKey
+
+      if (confirmed && currentKey == "cancel") || Input.trigger?(Input::BACK)
+        pbPlayCancelSE
+        pbFlashBagCancelButton
+        pbHidePartyActionMenu
+        break
+      elsif confirmed && currentKey == "shift"
+        if pbPartyPokemonActive?(pkmn)
+          pbPlayBuzzerSE
+          pbShowPartyAlreadyInBattleMessage(pkmn)
+        else
+          pbPlayDecisionSE
+          pbHidePartyActionMenu
+          result = @battle.pbParty(0).index(pkmn)
+          break
+        end
+      elsif confirmed && currentKey == "summary"
+        pbPlayDecisionSE
+        pbHidePartyActionMenu
+        pbSummaryPanelMenu(PartyPseudoBattler.new(pkmn), false)   # false - no message box in this context, see pbSummaryPanelMenu
+        pbShowPartyActionMenu(currentKey, pkmn)
+      elsif confirmed && currentKey == "check_moves"
+        pbPlayDecisionSE
+        pbHidePartyActionMenu
+        pbMovesPanelMenu(PartyPseudoBattler.new(pkmn))
+        pbShowPartyActionMenu(currentKey, pkmn)
+      end
+    end
+    return result
+  end
+
+  # Simple party-target picker for using an item on a Pokemon - HP/PP
+  # restore, status restore, and battle item pockets all need this now
+  # (anything except Poke Balls, which already have their own foe-targeting
+  # path in pbItemMenu below). Reuses the same slot-list UI/graphics the
+  # switch page's own list uses, just with the "Use {item} on who?" prompt
+  # and no action menu (shift/summary/check_moves) behind it - picking a
+  # slot returns its party index immediately, cancel returns -1. Whether
+  # the chosen Pokemon is actually a legal target for this item (fainted,
+  # already at full HP, doesn't have that status, etc.) is still the
+  # engine's own job via pbItemMenu's usual yield/reject handling, same as
+  # everywhere else in this file.
+  def pbChooseItemTargetPokemon(promptText)
+    # Always starts on the first Pokemon in the list, deliberately not
+    # @partyMenuLastSlotKey - that memory belongs to the switch page's own
+    # slot list (keyboard-only), and reusing it here would carry a
+    # leftover selection in from a completely unrelated interaction.
+    currentKey = PARTY_SLOT_KEYS.find { |key| pbPartySlotEnabled?(key) } || "cancel"
+    pbShowPartyMenu(currentKey, promptText)
+    result = -1
+    loop do
+      pbUpdate
+
+      dRow = 0
+      dCol = 0
+      if Input.trigger?(Input::UP)
+        dRow = -1
+      elsif Input.trigger?(Input::DOWN)
+        dRow = 1
+      elsif Input.trigger?(Input::LEFT)
+        dCol = -1
+      elsif Input.trigger?(Input::RIGHT)
+        dCol = 1
+      end
+      newKey = pbPartyMenuNextKey(currentKey, dRow, dCol)
+      if newKey != currentKey
+        pbPlayCursorSE
+        currentKey = newKey
+        pbUpdatePartyMenuOpacity(currentKey)
+      end
+
+      mouseClicked = Mouse.active? && Mouse.click?
+      clickedKey = nil
+      if mouseClicked
+        PARTY_SLOT_KEYS.each do |key|
+          sprite = @sprites["partySlot_#{key}"]
+          clickedKey = key if sprite && pbPartySlotEnabled?(key) && Mouse.over?(sprite)
+        end
+        clickedKey = "cancel" if @sprites["bagUI_cancel"] && Mouse.over?(@sprites["bagUI_cancel"])
+      end
+      if clickedKey && clickedKey != currentKey
+        currentKey = clickedKey
+        pbUpdatePartyMenuOpacity(currentKey)
+      end
+      confirmed = Input.trigger?(Input::USE) || clickedKey
+
+      if (confirmed && currentKey == "cancel") || Input.trigger?(Input::BACK)
+        pbPlayCancelSE
+        pbFlashBagCancelButton
+        result = -1
+        break
+      elsif confirmed
+        pbPlayDecisionSE
+        result = PARTY_SLOT_KEYS.index(currentKey)
+        break
+      end
+    end
+    pbHidePartyMenu
+    return result
+  end
+
+  # Battle::Scene#pbPartyMenu - replaces the default Essentials party
+  # screen entirely. Yield-based, same contract as pbFightMenu/pbItemMenu:
+  # called by Battle#pbPartyMenu's own override (see the `class Battle`
+  # block further down this file) with a block that actually registers the
+  # switch via pbRegisterSwitch. Yields the chosen party index (0-5), or -1
+  # for cancel; the block returns true once it's actually accepted the
+  # choice, false to reject it (already active, fainted, etc.) and stay on
+  # this page rather than closing - same division of responsibility as the
+  # move grid's own yield contract.
+  def pbPartyMenu(idxBattler)
+    # Same snapshot-before-pbHideCommandButtons fix as pbFightMenu/
+    # pbItemMenu needed - that call resets @cmdCancelWanted to false as a
+    # side effect, so the tail's "was this the second Pokemon of a double
+    # battle" check has to read it before that happens.
+    wasSecondBattlerOfDouble = @cmdCancelWanted
+    pbHideDataBoxes
+    pbHideCommandButtons   # fight/bag/run/pokemon + icon_party/icon_foe exit
+    pbScrollMessageBoxOut  # "What will {1} do?" exits too - reloaded with new text below
+
+    currentKey = (@partyMenuLastSlotKey && pbPartySlotEnabled?(@partyMenuLastSlotKey)) ? @partyMenuLastSlotKey :
+                 (PARTY_SLOT_KEYS.find { |key| pbPartySlotEnabled?(key) } || "cancel")
+    @partyMenuLastSlotKey = currentKey if currentKey != "cancel"
+    pbShowPartyMenu(currentKey)
+
+    result = false
+    loop do
+      pbUpdate
+
+      dRow = 0
+      dCol = 0
+      if Input.trigger?(Input::UP)
+        dRow = -1
+      elsif Input.trigger?(Input::DOWN)
+        dRow = 1
+      elsif Input.trigger?(Input::LEFT)
+        dCol = -1
+      elsif Input.trigger?(Input::RIGHT)
+        dCol = 1
+      end
+      newKey = pbPartyMenuNextKey(currentKey, dRow, dCol)
+      if newKey != currentKey
+        pbPlayCursorSE
+        currentKey = newKey
+        @partyMenuLastSlotKey = currentKey if currentKey != "cancel"   # keyboard-only
+        pbUpdatePartyMenuOpacity(currentKey)
+      end
+
+      mouseClicked = Mouse.active? && Mouse.click?
+      clickedKey = nil
+      if mouseClicked
+        PARTY_SLOT_KEYS.each do |key|
+          sprite = @sprites["partySlot_#{key}"]
+          clickedKey = key if sprite && pbPartySlotEnabled?(key) && Mouse.over?(sprite)
+        end
+        clickedKey = "cancel" if @sprites["bagUI_cancel"] && Mouse.over?(@sprites["bagUI_cancel"])
+      end
+      if clickedKey && clickedKey != currentKey
+        currentKey = clickedKey   # mouse clicks don't touch @partyMenuLastSlotKey - keyboard-only
+        pbUpdatePartyMenuOpacity(currentKey)
+      end
+      confirmed = Input.trigger?(Input::USE) || clickedKey
+
+      if (confirmed && currentKey == "cancel") || Input.trigger?(Input::BACK)
+        pbPlayCancelSE
+        pbFlashBagCancelButton
+        # Same as the move grid's own cancel - not something the engine can
+        # reject, so this doesn't wait on yield's return value. Still yields
+        # -1 so the engine gets a chance to clear any pending state.
+        yield(-1)
+        pbHidePartyMenu
+        result = false
+        break
+      elsif confirmed
+        pbPlayDecisionSE
+        # Selecting a Pokemon opens the action menu (shift/summary/
+        # check_moves/cancel) rather than registering a switch immediately.
+        # Only confirming shift on a Pokemon that isn't already out actually
+        # finishes a switch (returns its party index below); everything
+        # else in there (summary, check_moves, cancel, or shift on an
+        # already-active Pokemon) comes back here to the slot list instead.
+        idx = PARTY_SLOT_KEYS.index(currentKey)
+        party = @battle.pbParty(0)
+        pbHidePartyMenu
+        switchIdx = pbPartyActionMenu(party[idx])
+        if switchIdx && yield(switchIdx)
+          result = true
+          break
+        end
+        pbShowPartyMenu(currentKey)
+      end
+    end
+
+    if result && (@battle.singleBattle? || wasSecondBattlerOfDouble)
+      # Chosen and there's nobody else left to act this round - close the
+      # whole Command page, same as Fight/Bag/Run.
+      pbHideCommandPageAssets
+    elsif result
+      # Chosen, but this was the FIRST Pokemon of a double battle's turn -
+      # the second Pokemon still needs Fight/Bag/Pokemon/Run, so this just
+      # returns to the Command menu rather than tearing the whole page down.
+      pbShowCommandButtons("fight")
+    else
+      # Cancelled - same reasoning as pbItemMenu's own cancel path (see
+      # pbBagMenuLoop): the message box was scrolled OUT when this page
+      # opened, same as Bag, and nothing here re-scrolls it back in. Calling
+      # pbShowCommandButtons here as well would fade the Command buttons in
+      # a second time right on top of the engine's own fresh
+      # pbCommandMenuEx entrance that follows, causing a visible flicker.
+      # The engine calls pbCommandMenu again on its own once this returns
+      # false, and that fresh entrance does the one full cascade
+      # (background/ball bar/buttons/message box) cleanly.
+    end
+    pbShowDataBoxes
+    return result
+  end
+end
+
+# Lightweight stand-ins for a live Battle::Battler/Battle::Move, used only so
+# the Party page's shift button can send a benched Pokemon (one that isn't
+# actually out on the field, so there's no real Battle::Battler for it)
+# through the Summary/Moves panels unchanged - pbBuildSummaryPanelInfo/
+# pbBuildMovesPanelInfo/pbBuildMovesPanelMoveInfo/pbMovesSlotEnabled? etc.
+# only ever call .pokemon/.ability/.item/.moves on whatever they're given,
+# so wrapping the bench Pokemon in these two classes lets every one of those
+# methods run exactly as written for a real battler too - no branching
+# needed inside any of them.
+class PartyPseudoBattler
+  attr_reader :pokemon
+  def initialize(pkmn)
+    @pokemon = pkmn
+  end
+
+  def ability
+    @pokemon.ability
+  end
+
+  def item
+    @pokemon.item
+  end
+
+  def moves
+    @pokemon.moves.map { |m| PartyPseudoMove.new(m) }
+  end
+end
+
+class PartyPseudoMove
+  def initialize(pkmnMove)
+    @pkmnMove = pkmnMove
+    @data = (pkmnMove && pkmnMove.id) ? GameData::Move.get(pkmnMove.id) : nil
+  end
+
+  def id
+    @pkmnMove&.id
+  end
+
+  def pp
+    @pkmnMove&.pp
+  end
+
+  def name
+    @data&.name
+  end
+
+  def category
+    @data&.category
+  end
+
+  def power
+    @data&.power
+  end
+
+  def accuracy
+    @data&.accuracy
+  end
+
+  def type
+    @data&.type
+  end
+end
+
+# Battle (not Battle::Scene) - the default pbPartyMenu never actually asks
+# @scene for anything; it calls pbPartyScreen directly, which opens the
+# stock PokemonPartyScreen/PokemonParty_Scene regardless of what this file
+# does to Battle::Scene. Overriding Battle::Scene#pbPartyMenu alone, like
+# Fight/Bag's own overrides (called via @scene.pbFightMenu/@scene.pbItemMenu),
+# would not be enough - pbPartyScreen is the actual call that needs
+# redirecting, using the same yield/registration shape pbFightMenu/
+# pbItemMenu use.
+class Battle
+  # pbPartyScreen (not pbPartyMenu) is overridden here because pbPartyMenu
+  # (the command-menu "Pokemon" entry) is just one caller of pbPartyScreen
+  # among several; forced switches (a Pokemon faints and needs replacing,
+  # "do you want to switch Pokemon?" prompts, switch-forcing moves/items)
+  # all funnel through this same shared method too. Overriding it here
+  # means the custom UI loads for every one of those cases uniformly,
+  # rather than only the manual command-menu path.
+  alias customUI_pbPartyScreen pbPartyScreen
+  def pbPartyScreen(idxBattler, *args)
+    ret = -1
+    @scene.pbPartyMenu(idxBattler) do |idxParty|
+      next false if idxParty < 0
+      next false if !pbRegisterSwitch(idxBattler, idxParty)
+      ret = idxParty
+      next true
+    end
+    return ret
   end
 end
 

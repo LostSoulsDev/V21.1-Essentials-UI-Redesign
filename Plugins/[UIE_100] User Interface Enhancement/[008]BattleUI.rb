@@ -3,10 +3,6 @@
 #                               V 1.0.46
 #                        Developed by Carmaniac
 #===============================================================================
-# Replaces the default Pokémon Essentials battle UI (command bar, fight bar,
-# party ball tray, message box, and Bag/item flow) with a custom graphic set.
-# Works by reopening Battle::Scene, aliasing and overriding existing methods
-# where needed, and adding new supporting methods.
 module Settings
   CUSTOM_BATTLE_UI_GRAPHICS_PATH = "Graphics/Custom UI/Battle System/"
 end

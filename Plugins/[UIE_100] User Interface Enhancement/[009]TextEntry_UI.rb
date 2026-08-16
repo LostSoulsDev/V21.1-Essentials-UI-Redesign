@@ -21,28 +21,24 @@ class PokemonEntryScene2
   BACK    = -2
   OK      = -1
 
-  # Grid tile geometry
   TILE_START_X = 72
   TILE_START_Y = 128
   TILE_WIDTH   = 40
   TILE_HEIGHT  = 56
-  TILE_ROW_GAP = 14   # gap between rows, added ON TOP of TILE_HEIGHT
-  TILE_ROW_STEP = TILE_HEIGHT + TILE_ROW_GAP   # = 70px between each row's start Y
+  TILE_ROW_GAP = 14
+  TILE_ROW_STEP = TILE_HEIGHT + TILE_ROW_GAP
 
-  # Character tile text colours
   TILE_TEXT_COLOR   = Color.new(255, 255, 255)
   TILE_SHADOW_COLOR = Color.new(32, 32, 32)
 
-  # button_base panel
   BUTTON_BASE_X = 66
   BUTTON_BASE_Y = 120
   BUTTON_BASE_WIDTH  = 532
   BUTTON_BASE_HEIGHT = 352
 
-  # overlay_controls (tabs/back/ok panel)
   CONTROLS_FINAL_X = 666
   CONTROLS_FINAL_Y = 114
-  CONTROLS_OFFSCREEN_X = 800   # starts off the right edge of an 800x480 screen
+  CONTROLS_OFFSCREEN_X = 800
 
   MODE_POSITIONS = {
     MODE1 => [702, 150],
@@ -56,8 +52,6 @@ class PokemonEntryScene2
   OK_POSITION   = [694, 428]
   BACK_OK_SIZE  = [60, 44]
 
-  # Shift applied to the top-of-screen subject icon/shadow/gender cluster and
-  # the helptext + typed-text preview, per updated layout spec.
   TOP_X_OFFSET = 130
 
   class NameEntryCursor
@@ -284,9 +278,6 @@ class PokemonEntryScene2
     pbDrawTextPositions(sprite.bitmap, textpos)
   end
 
-  # Flashes a tile between the normal and pressed (_p) graphic twice, then
-  # leaves it on the normal graphic. Used as visual feedback when a character
-  # is selected via mouse click or keyboard/gamepad confirm.
   def flashTile(spr, char)
     2.times do
       drawTile(spr, char, pressed: true)
@@ -303,7 +294,6 @@ class PokemonEntryScene2
   end
 
   def setupModeIcon
-    # Vertical strip: 60x176 total, same per-frame button size as before, stacked vertically.
     @modeBitmap = AnimatedBitmap.new(GRAPHICS_PATH + "icon_mode")
     @sprites["mode_icon"] = Sprite.new(@viewport)
     @sprites["mode_icon"].bitmap = @modeBitmap.bitmap
@@ -312,8 +302,6 @@ class PokemonEntryScene2
     @sprites["mode_icon"].x = MODE_POSITIONS[MODE1][0]
     @sprites["mode_icon"].y = MODE_POSITIONS[MODE1 + @mode][1] rescue MODE_POSITIONS[MODE1][1]
     updateModeIconPosition
-    # mode_icon sits on top of overlay_controls and must always track its X
-    # exactly - fixed offset computed once from their resting X positions.
     @modeIconOffsetX = @sprites["mode_icon"].x - CONTROLS_FINAL_X
   end
 
@@ -331,8 +319,6 @@ class PokemonEntryScene2
   end
 
   def setupBlanksAndHelpOverlay
-    # Typed-text preview (blanks/underline) and helptext shifted per updated
-    # layout spec (+TOP_X_OFFSET on X), everything else still vanilla logic.
     @blanks = []
     @maxlength.times do |i|
       @sprites["blank#{i}"] = Sprite.new(@viewport)
@@ -380,10 +366,9 @@ class PokemonEntryScene2
     @sprites["cursor"].visible = false
     @scrolling = true
 
-    scrollDistance = Graphics.height - BUTTON_BASE_Y   # far enough to clear the bottom of the screen
+    scrollDistance = Graphics.height - BUTTON_BASE_Y
     timer_start = System.uptime
 
-    # Scroll button_base + grid DOWN and off the bottom of the screen
     loop do
       @gridScrollY = lerp(0, scrollDistance, 0.25, timer_start, System.uptime)
       @sprites["button_base"].y = BUTTON_BASE_Y + @gridScrollY
@@ -402,7 +387,6 @@ class PokemonEntryScene2
     end
     updateModeIconPosition
 
-    # Scroll button_base + grid back UP, entering from the bottom of the screen
     @gridScrollY = scrollDistance
     @sprites["button_base"].y = BUTTON_BASE_Y + @gridScrollY
     repositionGridSprites
@@ -556,8 +540,6 @@ class PokemonEntryScene2
     return false
   end
 
-  # Precompute the clickable Rects for the tab/BACK/OK controls once - these
-  # don't move, so there's no need to allocate new Rect objects every frame.
   def setupMouseHitboxes
     @modeHitboxes = {}
     [MODE1, MODE2, MODE3, MODE4].each do |key|
@@ -572,7 +554,7 @@ class PokemonEntryScene2
     return if @scrolling
     chset = @@Characters[@mode][0]
     @gridSprites.each_with_index do |spr, i|
-      next unless chset[i]   # only skip truly nonexistent slots, not blank/space tiles
+      next unless chset[i]
       next unless spr.over?
       if spr.click?
         @cursorpos = i
@@ -687,7 +669,6 @@ class PokemonEntryScene2
         end
       end
 
-      # Handle mouse-driven OK confirm result (set by confirmEntry via click handler)
       if @pendingResult
         ret = @pendingResult
         break
@@ -699,8 +680,6 @@ class PokemonEntryScene2
 
   def pbEndScene
     pbFadeOutAndHide(@sprites) { pbUpdate }
-    # Dispose each tile's individually-allocated bitmap first - pbDisposeSpriteHash
-    # below disposes the sprites themselves but doesn't know about their bitmaps.
     @gridSprites&.each { |spr| spr.bitmap.dispose if spr.bitmap && !spr.bitmap.disposed? }
     @tileBitmapNormal&.dispose
     @modeBitmap&.dispose

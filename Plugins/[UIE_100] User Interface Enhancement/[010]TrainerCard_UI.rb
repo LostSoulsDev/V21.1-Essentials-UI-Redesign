@@ -57,8 +57,6 @@ class PokemonTrainerCard_Scene
     @sprites["card"].z = 1.5   # above the grid/footer, below cancel
   end
 
-  # Expands zoom_x from 0 to 1, pivoted from the card's centre, to look like
-  # the card is flipping open horizontally.
   def animateCardFlip
     timer_start = System.uptime
     loop do
@@ -74,7 +72,7 @@ class PokemonTrainerCard_Scene
   def setupGridBackground
     @sprites["grid"] = IconSprite.new(0, 0, @viewport)
     @sprites["grid"].setBitmap(GRAPHICS_PATH + "grid")
-    @sprites["grid"].z = -1   # sits behind everything else (card, trainer, text)
+    @sprites["grid"].z = -1
     @gridX = 0
     @gridY = 0
   end
@@ -154,7 +152,6 @@ class PokemonTrainerCard_Scene
     end
   end
 
-  # Flashes cancel.png between the normal and pressed (_p) graphic twice,
   def flashCancelButton
     2.times do
       @sprites["cancel"].setBitmap(GRAPHICS_PATH + "cancel_p")
@@ -170,7 +167,6 @@ class PokemonTrainerCard_Scene
     end
   end
 
-  # Zooms the card back down to 0 (flips closed) before the scene fades out.
   def closeCardFlip
     timer_start = System.uptime
     loop do

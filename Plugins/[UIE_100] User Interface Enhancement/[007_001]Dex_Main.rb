@@ -25,7 +25,6 @@ class PokemonPokedex_Scene
   GRID_START_X  = 284
   GRID_START_Y  = 56
 
-  # Icon/text layout within each box, relative to the box's top-left corner
   GRID_ICON_X   = 24
   GRID_ICON_Y   = 6
   GRID_STATUS_X = 6
@@ -33,7 +32,6 @@ class PokemonPokedex_Scene
   GRID_NUM_RIGHT_X = 100
   GRID_NUM_Y    = 84
 
-  # Selection highlight, relative to the box it's sitting on
   HIGHLIGHT_OFFSET_X = -4
   HIGHLIGHT_OFFSET_Y = -4
   HIGHLIGHT_W        = 120
@@ -41,7 +39,6 @@ class PokemonPokedex_Scene
   HIGHLIGHT_FRAMES   = 4
   HIGHLIGHT_SPEED    = 7
 
-  # Box opacity, not selected vs selected
   CELL_OPACITY_UNSELECTED = 100
   CELL_OPACITY_SELECTED   = 255
 
@@ -55,11 +52,9 @@ class PokemonPokedex_Scene
   SCROLLBAR_BAR_W = 16
   SCROLLBAR_BAR_H = 24
 
-  # Cancel button
   CANCEL_X = 768
   CANCEL_Y = 448
 
-  # Up/down arrow buttons (mouse only)
   UPARROW_X   = 10
   UPARROW_Y   = 444
   DOWNARROW_X = 50
@@ -73,7 +68,6 @@ class PokemonPokedex_Scene
   SEARCH_BTN_TEXT_COLOR  = Color.new(0, 0, 0)
   SEARCH_BTN_TEXT_SHADOW = Color.new(173, 189, 189)
 
-  # Labels for the "By X" sort indicator
   FILTER_MODE_NAMES = {
     MODENUMERICAL => "Number",
     MODEATOZ      => "Name",

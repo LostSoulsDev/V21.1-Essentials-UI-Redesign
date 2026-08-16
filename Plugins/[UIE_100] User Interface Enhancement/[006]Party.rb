@@ -11,7 +11,6 @@ class PokemonParty_Scene
 
   GRID_SCROLL_W = 800
 
-  # Decor bar/overlay rest positions and slide animation
   BAR_REST_X     = 0
   BAR_REST_Y     = 342
   OVERLAY_REST_X = 0
@@ -19,7 +18,6 @@ class PokemonParty_Scene
   SLIDE_FRAMES        = 15
   OVERLAY_SLIDE_DELAY = 5   # frames bg_overlay waits before it starts sliding
 
-  # name_bar / button_bg / pokemon_base — all slide in together, in sync
   NAME_BAR_REST_X = 0
   NAME_BAR_REST_Y = 14
   NAME_BAR_W      = 384
@@ -34,34 +32,25 @@ class PokemonParty_Scene
   POKEMON_BASE_H      = 66
   POKEMON_SPRITE_Y_OFFSET = -20
 
-  # Base party panel (icon_box.png) — one per slot, always shown regardless
-  # of whether that slot has a Pokémon in it
   BOX_REST_Y = 362
   BOX_X_POSITIONS = [70, 180, 290, 400, 510, 620]
 
-  # icon_bar_overlay.png — only shown if that slot has a Pokémon, position
-  # relative to its box, and moves in lockstep with it
   BAR_OVERLAY_OFFSET_X = 2
   BAR_OVERLAY_OFFSET_Y = 80
 
-  # icon_overlay_hp.png — the HP bar, on top of icon_bar_overlay.png,
-  # relative to it. 100x12 total, 3 colour zones stacked vertically.
   HP_OVERLAY_OFFSET_X = 2
   HP_OVERLAY_OFFSET_Y = 2
   HP_OVERLAY_W        = 100
   HP_OVERLAY_H        = 12
 
-  # Animated species icon, relative to icon_box.png
   SPECIES_ICON_OFFSET_X = 22
   SPECIES_ICON_OFFSET_Y = 12
 
-  # icon_exp.png — single bar, 100x4, relative to icon_bar_overlay.png
   EXP_OVERLAY_OFFSET_X = 2
   EXP_OVERLAY_OFFSET_Y = 8
   EXP_OVERLAY_W        = 100
   EXP_OVERLAY_H        = 4
 
-  # name_bar.png — text/icons bound to it, in relative position
   NAME_BAR_TEXT_COLOR  = Color.new(255, 255, 255)
   NAME_BAR_TEXT_SHADOW = Color.new(33, 33, 33)
   NAME_BAR_NAME_X = 22
@@ -77,7 +66,6 @@ class PokemonParty_Scene
   NAME_BAR_MAIL_X = 350
   NAME_BAR_MAIL_Y = 22
 
-  # name_bar.png — second row: HP label/value, status icon, HP bar
   NAME_BAR_HP_LABEL_X = 22
   NAME_BAR_HP_LABEL_Y = 50
   NAME_BAR_HP_VALUE_CENTER_X = 180
@@ -91,7 +79,6 @@ class PokemonParty_Scene
   NAME_BAR_HP_FILL_W = 176
   NAME_BAR_HP_FILL_H = 30
 
-  # name_box_selector.png — follows the selected box, baked-in name text
   NAME_SELECTOR_W = 184
   NAME_SELECTOR_H = 56
   NAME_SELECTOR_Y = 480 - 118
@@ -101,10 +88,8 @@ class PokemonParty_Scene
   NAME_SELECTOR_TEXT_SHADOW = Color.new(33, 33, 33)
   NAME_SELECTOR_ZOOM_FRAMES = 12
 
-  # Command button list — bound to button_bg.png's x scroll, always visible
-  # (not gated behind ACTION like vanilla). Vertically scrolling window.
   CMD_BTN_OFFSET_X   = 24
-  CMD_BTN_START_Y    = 40   # relative to button_bg.png
+  CMD_BTN_START_Y    = 40
   CMD_BTN_AREA_W     = 264
   CMD_BTN_AREA_H     = 236
   CMD_BTN_W          = 264
@@ -116,14 +101,12 @@ class PokemonParty_Scene
   CMD_BTN_TEXT_SHADOW = Color.new(173, 189, 189)
   CMD_BTN_TEXT_Y      = 12
 
-  # button_bg.png header text — "Do what with X?" / "X selected" etc
   BUTTON_BG_W = 312
   BUTTON_BG_H = 300
   BUTTON_BG_TEXT_Y = 10
   BUTTON_BG_TEXT_COLOR  = Color.new(255, 255, 255)
   BUTTON_BG_TEXT_SHADOW = Color.new(40, 40, 40)
 
-  # highlight.png — animated, 4 frames stacked vertically, 272x208 total
   CMD_HIGHLIGHT_W      = 272
   CMD_HIGHLIGHT_H      = 208
   CMD_HIGHLIGHT_FRAMES = 4
@@ -295,12 +278,6 @@ class PokemonParty_Scene
     pbZoomNameSelectorIn
   end
 
-  #-----------------------------------------------------------------------------
-  # Special single-purpose entry modes, set by whichever screen invoked the
-  # party picker for a specific action (using a consumable item from the
-  # Bag, giving an item directly from the Bag, or teaching a TM/TR/HM).
-  # Bypasses the normal main command list entirely for that pass.
-  #-----------------------------------------------------------------------------
   def pbSetUseItemMode(item)
     @special_mode = :use_item
     @special_item = item
@@ -316,13 +293,6 @@ class PokemonParty_Scene
     @special_move = move_id
   end
 
-  #-----------------------------------------------------------------------------
-  # Battle-context mode for the party picker used mid-battle. battle_indices
-  # is the list of @party slot indices currently on the field, so the
-  # command list can tell an active battler apart from a benched Pokémon.
-  # battle_scene/idx_battler give access back to the battle for actions
-  # (Restore) that need to hand off to Battle::Scene#pbItemMenu.
-  #-----------------------------------------------------------------------------
   def pbSetBattleMode(battle_indices, battle_scene = nil, idx_battler = nil)
     @special_mode = :battle
     @battle_indices = battle_indices || []
@@ -337,10 +307,6 @@ class PokemonParty_Scene
     @battle_indices = nil
   end
 
-  #-----------------------------------------------------------------------------
-  # Builds whichever command list matches @menu_mode, and bakes the matching
-  # header text onto button_bg. Dispatches to the mode-specific builder.
-  #-----------------------------------------------------------------------------
   def pbBuildCommandList
     @menu_mode ||= :main
     if @special_mode
@@ -371,10 +337,6 @@ class PokemonParty_Scene
     pbDrawButtonBgHeader
   end
 
-  #-----------------------------------------------------------------------------
-  # Use item (consumable, from the Bag) — Use / Cancel.
-  # "Use ItemName?" header.
-  #-----------------------------------------------------------------------------
   def pbBuildUseItemCommandList
     @command_list = [_INTL("Use"), _INTL("Cancel")]
     @command_data = [:special_use, :special_cancel]
@@ -382,10 +344,6 @@ class PokemonParty_Scene
     pbDrawButtonBgHeaderText(_INTL("Use {1}?", itemname))
   end
 
-  #-----------------------------------------------------------------------------
-  # Give item (directly from the Bag) — Give / Cancel.
-  # "Give X ItemName?" header.
-  #-----------------------------------------------------------------------------
   def pbBuildGiveItemCommandList
     pkmn = @party[@activecmd]
     name = pkmn ? pkmn.name : ""
@@ -403,11 +361,6 @@ class PokemonParty_Scene
     end
   end
 
-  #-----------------------------------------------------------------------------
-  # Teach move (TM/TR/HM, from the Bag) — Learn / Cancel if the selected
-  # Pokémon can learn it, just Cancel otherwise.
-  # "Teach MoveName?" / "Can't learn MoveName" header.
-  #-----------------------------------------------------------------------------
   def pbBuildTeachMoveCommandList
     pkmn = @party[@activecmd]
     move_data = @special_move ? GameData::Move.get(@special_move) : nil
@@ -425,12 +378,6 @@ class PokemonParty_Scene
     end
   end
 
-  #-----------------------------------------------------------------------------
-  # Temporary battle-context list — Switch/Restore/Summary/Check Moves/
-  # Cancel for a benched Pokémon, or Restore/Summary/Check Moves/Cancel
-  # for whichever Pokémon is currently on the field. "Do what with X?"
-  # header, matching the normal field menu's phrasing.
-  #-----------------------------------------------------------------------------
   def pbBuildBattleCommandList
     pkmn = @party[@activecmd]
     in_battle = @battle_indices && @battle_indices.include?(@activecmd)
@@ -454,11 +401,6 @@ class PokemonParty_Scene
     pbDrawButtonBgHeaderText(_INTL("Do what with {1}?", name))
   end
 
-  #-----------------------------------------------------------------------------
-  # Main list — same dynamic vanilla list (Summary, Debug, Switch, Mail,
-  # Item, hidden move field commands), plus a Cancel entry at the end.
-  # "Do what with X?" header.
-  #-----------------------------------------------------------------------------
   def pbBuildMainCommandList
     @command_list = []
     @command_data = []
@@ -485,9 +427,6 @@ class PokemonParty_Scene
     @command_data.push(:cancel)
   end
 
-  #-----------------------------------------------------------------------------
-  # Item sub-menu — Give / Take / Back. "Do what with X?" header.
-  #-----------------------------------------------------------------------------
   def pbBuildItemCommandList
     pkmn = @party[@activecmd]
     @command_list = [_INTL("Give")]
@@ -500,19 +439,11 @@ class PokemonParty_Scene
     @command_data.push(:back)
   end
 
-  #-----------------------------------------------------------------------------
-  # Move sub-menu (a hidden-move field command was picked) — Use / Back.
-  # "Do what with X?" header.
-  #-----------------------------------------------------------------------------
   def pbBuildMoveCommandList
     @command_list = [_INTL("Use"), _INTL("Back")]
     @command_data = [:move_use, :back]
   end
 
-  #-----------------------------------------------------------------------------
-  # Bakes the contextual header text onto button_bg — "Do what with X?" for
-  # the main/item/move lists, "X selected" for the switch list.
-  #-----------------------------------------------------------------------------
   def pbDrawButtonBgHeader
     spr = @sprites["button_bg"]
     return if !spr
@@ -538,12 +469,6 @@ class PokemonParty_Scene
     old_bitmap.dispose if old_bitmap && !old_bitmap.disposed? && old_bitmap != bmp
   end
 
-
-
-  #-----------------------------------------------------------------------------
-  # Eases name_selector's zoom_y from 0 to 1, expanding it into view from
-  # its bottom-anchored origin
-  #-----------------------------------------------------------------------------
   def pbZoomNameSelectorIn
     spr = @sprites["name_selector"]
     return if !spr
@@ -557,10 +482,6 @@ class PokemonParty_Scene
     spr.zoom_y = 1
   end
 
-  #-----------------------------------------------------------------------------
-  # Eases name_selector's zoom_y from 1 back to 0, collapsing it back down
-  # into its bottom-anchored origin
-  #-----------------------------------------------------------------------------
   def pbZoomNameSelectorOut
     spr = @sprites["name_selector"]
     return if !spr
@@ -574,11 +495,6 @@ class PokemonParty_Scene
     spr.zoom_y = 0
   end
 
-  #-----------------------------------------------------------------------------
-  # Draws the selected Pokémon's name baked directly onto the selector
-  # graphic's own bitmap, so zoom_y scales the text along with the graphic.
-  # Horizontally centred in the selector's width, offset vertically as given.
-  #-----------------------------------------------------------------------------
   def pbDrawNameSelectorText
     spr = @sprites["name_selector"]
     return if !spr
@@ -604,12 +520,6 @@ class PokemonParty_Scene
     spr.oy = NAME_SELECTOR_H
   end
 
-  #-----------------------------------------------------------------------------
-  # Bakes the selected Pokémon's name and level onto name_bar's own bitmap
-  # (so they move with it during the slide), and positions/shows the
-  # gender symbol and mega/item/mail icons as separate sprites bound to
-  # name_bar's current position.
-  #-----------------------------------------------------------------------------
   def pbDrawNameBarContent
     spr = @sprites["name_bar"]
     return if !spr
@@ -662,9 +572,6 @@ class PokemonParty_Scene
     pbUpdateNameBarIcons(pkmn)
   end
 
-  #-----------------------------------------------------------------------------
-  # Shows/hides the mega/item/mail icons for the selected Pokémon
-  #-----------------------------------------------------------------------------
   def pbUpdateNameBarIcons(pkmn)
     mega_spr = @sprites["namebar_mega"]
     item_spr = @sprites["namebar_item"]
@@ -722,20 +629,12 @@ class PokemonParty_Scene
     pbSyncNameBarIconPositions
   end
 
-  #-----------------------------------------------------------------------------
-  # Starts (or updates the target of) a width animation for one HP bar.
-  # If no animation is running and the width already matches, applies it
-  # immediately with no tween — only actual changes animate.
-  #-----------------------------------------------------------------------------
   def pbStartHPBarAnim(key, spr, target_w, zone, zone_h, max_w, identity = nil)
     @hp_bar_anim ||= {}
     entry = @hp_bar_anim[key]
     identity_changed = entry && identity && entry[:identity] != identity
     current_w = entry ? entry[:current_w] : target_w
     if entry.nil? || identity_changed
-      # New bar, or now showing a different Pokémon than last time (e.g.
-      # switched selection) — snap instantly, don't animate between two
-      # different Pokémon's HP values
       current_w = target_w
     end
     @hp_bar_anim[key] = {
@@ -746,11 +645,6 @@ class PokemonParty_Scene
     spr.src_rect.set(0, zone * zone_h, current_w.clamp(0, max_w), zone_h)
   end
 
-  #-----------------------------------------------------------------------------
-  # Eases every active HP bar's displayed width toward its target — called
-  # every frame from update. Zone (colour) always reflects the live target
-  # immediately; only the width itself is what animates.
-  #-----------------------------------------------------------------------------
   def pbAnimateHPBars
     return if !@hp_bar_anim
     @hp_bar_anim.each_value do |entry|
@@ -761,9 +655,6 @@ class PokemonParty_Scene
       t = t.clamp(0.0, 1.0)
       entry[:current_w] = (entry[:start_w] + ((entry[:target_w] - entry[:start_w]) * t)).round
       w = entry[:current_w].clamp(0, entry[:max_w])
-      # Colour reflects the bar's own current on-screen width, not the
-      # final target, so it visibly passes through yellow as it drains
-      # rather than snapping straight to the destination colour.
       fraction = entry[:max_w] > 0 ? w.to_f / entry[:max_w] : 0
       zone = 0
       zone = 1 if fraction <= 0.5
@@ -772,10 +663,6 @@ class PokemonParty_Scene
     end
   end
 
-  #-----------------------------------------------------------------------------
-  # Keeps the gender/mega/item/mail icons locked to name_bar's current x/y —
-  # call every frame during the slide animations so they move together
-  #-----------------------------------------------------------------------------
   def pbSyncNameBarIconPositions
     bar = @sprites["name_bar"]
     return if !bar
@@ -807,12 +694,6 @@ class PokemonParty_Scene
     end
   end
 
-  #-----------------------------------------------------------------------------
-  # Swaps the selected Pokémon's front sprite when the selection changes.
-  # Same centering approach as the dex screen: ox/oy derived from the
-  # bitmap's own size, with a parity nudge so the rendered edge (x - ox)
-  # always lands on an even pixel — avoiding sub-pixel blur.
-  #-----------------------------------------------------------------------------
   def pbUpdatePartySpriteGraphic(pkmn)
     spr = @sprites["party_pokemon_sprite"]
     return if !spr
@@ -840,10 +721,6 @@ class PokemonParty_Scene
     pbSyncPartySpritePosition
   end
 
-  #-----------------------------------------------------------------------------
-  # Centres the front sprite within pokemon_base.png's current x/y, using
-  # the same even-pixel-safe nudge as the dex screen
-  #-----------------------------------------------------------------------------
   def pbSyncPartySpritePosition
     spr  = @sprites["party_pokemon_sprite"]
     base = @sprites["pokemon_base"]
@@ -858,19 +735,8 @@ class PokemonParty_Scene
     spr.y = target_y
   end
 
-  #-----------------------------------------------------------------------------
-  # Shows/hides icon_bar_overlay, icon_overlay_hp, icon_exp, and the species
-  # icon per slot depending on whether that party slot actually has a
-  # Pokémon in it, and updates their fill/frame to match that Pokémon
-  #-----------------------------------------------------------------------------
   HP_BAR_ANIM_SECONDS = 0.5
 
-  #-----------------------------------------------------------------------------
-  # Sets each slot's target HP bar width/zone from the Pokémon's real HP,
-  # but only starts an animation if the value actually changed — the
-  # width itself eases toward the target every frame via
-  # pbAnimateHPBars, called from update.
-  #-----------------------------------------------------------------------------
   def pbUpdatePartyIcons
     @hp_bar_anim ||= {}
     6.times do |i|
@@ -940,9 +806,6 @@ class PokemonParty_Scene
     pbFadeOutAndHide(@sprites) { update }
     pbDisposeSpriteHash(@sprites)
     @viewport.dispose
-    # If a field move was selected, run it now — right after our own
-    # closing animation has fully finished, so it plays at the same point
-    # vanilla would naturally reach it once this scene ends
     if @move_to_trigger
       move_id = @move_to_trigger
       pkmn = @pokemon_for_move
@@ -952,12 +815,6 @@ class PokemonParty_Scene
     end
   end
 
-  #-----------------------------------------------------------------------------
-  # Slides bg_bar up from below the screen to its rest position, with
-  # bg_overlay following the same distance a few frames later. name_bar,
-  # button_bg, and pokemon_base slide in from the side in sync with each
-  # other, over the same overall timeline as bg_bar/bg_overlay.
-  #-----------------------------------------------------------------------------
   def pbSlideDecorIn
     bar_start = Graphics.height
     bar_dist  = bar_start - BAR_REST_Y
@@ -1008,10 +865,6 @@ class PokemonParty_Scene
     end
   end
 
-  #-----------------------------------------------------------------------------
-  # Keeps icon_bar_overlay/icon_overlay_hp locked to their box's current
-  # position, so they mirror the box's movement exactly during animation
-  #-----------------------------------------------------------------------------
   def pbSyncBarOverlayToBox(i)
     box = @sprites["box#{i}"]
     bar = @sprites["barover#{i}"]
@@ -1035,13 +888,6 @@ class PokemonParty_Scene
     end
   end
 
-  #-----------------------------------------------------------------------------
-  # Creates/repositions/retexts the CMD_BTN_VISIBLE button sprites to show
-  # whichever slice of @command_list is currently scrolled into view.
-  # Buttons are bound to button_bg.png's x, so they scroll with it.
-  # force: rebuild every button's baked text even if the visible slice
-  # hasn't changed (used after pbBuildCommandList swaps the whole list).
-  #-----------------------------------------------------------------------------
   def pbUpdateCommandButtons(force = false)
     return if !@sprites["button_bg"]
     base_x = @sprites["button_bg"].x + CMD_BTN_OFFSET_X
@@ -1071,9 +917,6 @@ class PokemonParty_Scene
     pbUpdateCommandHighlight
   end
 
-  #-----------------------------------------------------------------------------
-  # Bakes one command button's background + centred label text
-  #-----------------------------------------------------------------------------
   def pbDrawCommandButtonBitmap(text)
     base = Bitmap.new(PARTY_FOLDER + "button_base.png")
     bmp  = Bitmap.new(base.width, base.height)
@@ -1090,11 +933,6 @@ class PokemonParty_Scene
     return bmp
   end
 
-  #-----------------------------------------------------------------------------
-  # Moves the highlight sprite onto whichever button row @cmdindex is
-  # currently on (relative to the scrolled window), hiding it if that
-  # command has scrolled out of view
-  #-----------------------------------------------------------------------------
   def pbUpdateCommandHighlight
     return if !@sprites["cmd_highlight"]
     slot = @cmdindex - @cmdscroll
@@ -1108,9 +946,6 @@ class PokemonParty_Scene
     @sprites["cmd_highlight"].y = btn.y + CMD_HIGHLIGHT_OFFSET_Y
   end
 
-  #-----------------------------------------------------------------------------
-  # Steps the highlight's animation frame — called every update tick
-  #-----------------------------------------------------------------------------
   def pbUpdateCommandHighlightAnim
     return if !@sprites["cmd_highlight"] || !@sprites["cmd_highlight"].visible
     @highlight_tick += 1
@@ -1121,10 +956,6 @@ class PokemonParty_Scene
     @sprites["cmd_highlight"].src_rect.y = @highlight_frame * frame_h
   end
 
-  #-----------------------------------------------------------------------------
-  # Moves @cmdindex up/down within @command_list, scrolling the visible
-  # window as needed. Wraps at the top/bottom of the whole list.
-  #-----------------------------------------------------------------------------
   def pbMoveCommandSelection(delta)
     return if @command_list.empty?
     @cmdindex = (@cmdindex + delta) % @command_list.length
@@ -1138,11 +969,6 @@ class PokemonParty_Scene
     pbUpdateCommandButtons
   end
 
-  #-----------------------------------------------------------------------------
-  # Slides everything back out the way it came in — bg_overlay leads since
-  # it was in front, bg_bar follows; name_bar/button_bg/pokemon_base/boxes
-  # retreat off-screen in sync with bg_bar's own timeline
-  #-----------------------------------------------------------------------------
   def pbSlideDecorOut
     bar_dist     = Graphics.height - BAR_REST_Y
     overlay_dist = Graphics.height - OVERLAY_REST_Y
@@ -1177,10 +1003,6 @@ class PokemonParty_Scene
     end
   end
 
-  #-----------------------------------------------------------------------------
-  # Repositions the existing command buttons/highlight to follow
-  # button_bg.x — cheap, no bitmap rebuilding, safe to call every frame
-  #-----------------------------------------------------------------------------
   def pbSyncCommandButtonsToBg
     return if !@sprites["button_bg"]
     base_x = @sprites["button_bg"].x + CMD_BTN_OFFSET_X
@@ -1209,22 +1031,10 @@ class PokemonParty_Scene
     pbUpdateSpriteHash(@sprites)
   end
 
-  #-----------------------------------------------------------------------------
-  # No-op stubs for vanilla hooks not used by this UI (help text display,
-  # annotation labels) — kept so calls from elsewhere in the party flow
-  # don't error, without any visible effect here.
-  #-----------------------------------------------------------------------------
   def pbSetHelpText(helptext); end
   def pbHasAnnotations?; return false; end
   def pbAnnotate(annot); end
 
-  #-----------------------------------------------------------------------------
-  # Override pbShowCommands — renders through the same dynamic button list
-  # (button_base graphics, highlight, scrolling window) as the main command
-  # list, so Debug menus and anything else that calls into this (Mail's
-  # Read/Take choice, etc.) look and behave consistently with the rest of
-  # the custom UI.
-  #-----------------------------------------------------------------------------
   def pbShowCommands(helptext, commands, index = 0)
     saved_list      = @command_list
     saved_data      = @command_data
@@ -1232,8 +1042,6 @@ class PokemonParty_Scene
     saved_cmdscroll = @cmdscroll
     saved_mode      = @menu_mode
 
-    # Guarantee a clickable way out for mouse users — most vanilla lists
-    # already end with Cancel/Back, only append one if none is present
     commands = commands.dup
     last = commands.last.to_s.downcase
     added_back = false
@@ -1306,34 +1114,10 @@ class PokemonParty_Scene
     @menu_mode    = saved_mode
     pbBuildCommandList
     pbUpdateCommandButtons(true)
-    # Consume any input still held from the keypress that just closed this
-    # popup, so a single BACK press can't immediately register again in
-    # whichever loop regains control right after this method returns
     Input.update
     return ret
   end
 
-  #-----------------------------------------------------------------------------
-  # Draws arbitrary header text (not the standard "Do what with X?"/"X
-  # selected" pattern) onto button_bg — used by pbShowCommands for whatever
-  # helptext the caller passed in
-  #-----------------------------------------------------------------------------
-  #-----------------------------------------------------------------------------
-  # Draws arbitrary header text (not the standard "Do what with X?"/"X
-  # selected" pattern) onto button_bg — used by pbShowCommands for whatever
-  # helptext the caller passed in. Wraps onto multiple lines and stacks
-  # them vertically around BUTTON_BG_TEXT_Y if the text is too wide to fit
-  # on one line, so longer vanilla item/status messages aren't cut off or
-  # overflow the header area.
-  #-----------------------------------------------------------------------------
-  #-----------------------------------------------------------------------------
-  # Draws arbitrary header text (not the standard "Do what with X?"/"X
-  # selected" pattern) onto button_bg — used by pbShowCommands for whatever
-  # helptext the caller passed in. If the text is too wide to fit, it's
-  # drawn onto a separate overlay sprite instead and scrolled horizontally
-  # (see pbUpdateHeaderTextScroll) rather than touching the Y position or
-  # wrapping onto multiple lines.
-  #-----------------------------------------------------------------------------
   def pbDrawButtonBgHeaderText(text)
     spr = @sprites["button_bg"]
     return if !spr
@@ -1366,11 +1150,6 @@ class PokemonParty_Scene
     end
   end
 
-  #-----------------------------------------------------------------------------
-  # Sets up the scrolling header text overlay — a clipped viewport the
-  # width of the header area, with a sprite inside holding the full text
-  # at its natural width, animated left/right by pbUpdateHeaderTextScroll
-  #-----------------------------------------------------------------------------
   HEADER_SCROLL_SPEED = 1.5
   HEADER_SCROLL_PAUSE = 40
 
@@ -1402,16 +1181,6 @@ class PokemonParty_Scene
     @header_scroll_viewport = nil
   end
 
-  #-----------------------------------------------------------------------------
-  # Scrolls the header text overlay left, pauses, scrolls back right,
-  # pauses, repeats — called every frame from update. Only the X position
-  # of the text sprite moves; the header's own Y never changes.
-  #-----------------------------------------------------------------------------
-  #-----------------------------------------------------------------------------
-  # Keeps the scrolling header text's clipping viewport locked to
-  # button_bg's current position, so it stays correctly placed during the
-  # slide animations
-  #-----------------------------------------------------------------------------
   def pbSyncHeaderTextScrollPosition
     return if !@header_scroll_viewport
     spr = @sprites["button_bg"]
@@ -1441,12 +1210,6 @@ class PokemonParty_Scene
     @header_scroll_sprite.x = @header_scroll_x.to_i
   end
 
-  #-----------------------------------------------------------------------------
-  # Override pbDisplay/pbConfirm/pbDisplayConfirm — vanilla's versions rely
-  # on a message box window this scene doesn't create. These route through
-  # pbShowCommands instead, so messages and confirmations render using the
-  # same themed button list and header text as the rest of the UI.
-  #-----------------------------------------------------------------------------
   def pbDisplay(text)
     pbShowCommands(text, [_INTL("OK")], 0)
   end
@@ -1487,12 +1250,6 @@ class PokemonParty_Scene
   def pbHardRefresh; pbUpdatePartyIcons; pbUpdateBoxSelection; end
   def pbClearSwitching; end
 
-  #-----------------------------------------------------------------------------
-  # Sets each box to icon_box_sel (if it's the selected slot), icon_box_faint
-  # (if that Pokémon has fainted), or plain icon_box otherwise. Selected
-  # always overrides fainted. Also freezes the species icon's animation
-  # while its Pokémon is fainted.
-  #-----------------------------------------------------------------------------
   def pbUpdateBoxSelection
     6.times do |i|
       box = @sprites["box#{i}"]
@@ -1513,13 +1270,6 @@ class PokemonParty_Scene
     end
   end
 
-  #-----------------------------------------------------------------------------
-  # Mouse: clicking a party box selects that member. Clicking a command
-  # button selects and immediately executes that command (matching a
-  # keyboard UP/DOWN-then-USE in one click). Mouse wheel scrolls the
-  # command list. Returns pbExecuteCommand's result if a button was
-  # clicked and executed, otherwise nil.
-  #-----------------------------------------------------------------------------
   def pbHandleMouseInput
     6.times do |i|
       box = @sprites["box#{i}"]
@@ -1593,18 +1343,6 @@ class PokemonParty_Scene
     end
   end
 
-  #-----------------------------------------------------------------------------
-  # Runs whatever the currently highlighted command does. Returns nil to
-  # keep the loop going (e.g. entered a sub-menu), or a value to hand back
-  # to pbChoosePokemon's caller (matching vanilla's return contract: -1 for
-  # cancel, an index/array for an actual selection).
-  #-----------------------------------------------------------------------------
-  #-----------------------------------------------------------------------------
-  # Give: opens the bag (vanilla's own PokemonBagScreen#pbChooseItemScreen)
-  # filtered to holdable items, gives the chosen one to the selected
-  # Pokémon (swapping out any currently-held item back into the bag first,
-  # matching vanilla's own Give behaviour), then refreshes.
-  #-----------------------------------------------------------------------------
   def pbPerformItemGive(screen)
     pkmn = @party[@activecmd]
     return if !pkmn
@@ -1629,9 +1367,6 @@ class PokemonParty_Scene
     pbDisplay(_INTL("Gave {1} {2}.", pkmn.name, GameData::Item.get(item).name))
   end
 
-  #-----------------------------------------------------------------------------
-  # Take: moves the selected Pokémon's held item back into the bag
-  #-----------------------------------------------------------------------------
   def pbPerformItemTake(screen)
     pkmn = @party[@activecmd]
     return if !pkmn || !pkmn.hasItem?
@@ -1646,20 +1381,6 @@ class PokemonParty_Scene
     pbDisplay(_INTL("Took away {1}.", GameData::Item.get(item).name))
   end
 
-  #-----------------------------------------------------------------------------
-  # Use: runs the hidden-move field effect for whichever move was picked
-  # from the main list (see @pending_move_index, set when that entry was
-  # selected). Falls back safely if there's no matching handler.
-  #-----------------------------------------------------------------------------
-  #-----------------------------------------------------------------------------
-  # Use: runs the hidden-move field effect for whichever move was picked
-  # from the main list (see @pending_move_index, set when that entry was
-  # selected). Field move animations (Surf, Cut, etc.) expect to play on
-  # the overworld map, not with this screen still open on top — so the
-  # screen fades out first, exactly like vanilla's own party menu does
-  # before running these effects. Returns true if the whole screen should
-  # now close (the caller is expected to break its loop and return -1).
-  #-----------------------------------------------------------------------------
   def pbPerformMoveUse(screen)
     pkmn = @party[@activecmd]
     return false if !pkmn || @pending_move_index.nil?
@@ -1668,15 +1389,6 @@ class PokemonParty_Scene
 
     if HiddenMoveHandlers.hasHandler(move.id)
       if HiddenMoveHandlers.triggerCanUseMove(move.id, pkmn, true)
-        # Don't close the scene ourselves here — just signal that a move
-        # is pending and let it run once we've returned all the way back
-        # up through pbChoosePokemon/pbPokemonScreen. pbPokemonScreen's
-        # own outer pbFadeOutIn (called from the pause menu) will then
-        # handle closing this scene properly and in the right order, the
-        # same as it does for any other menu exit. triggerUseMove sets
-        # $game_temp.in_menu = false itself, which the pause menu's loop
-        # checks right after pbFadeOutIn finishes to decide whether to
-        # close itself too.
         @move_to_trigger = move.id
         @pokemon_for_move = pkmn
         return true
@@ -1696,16 +1408,6 @@ class PokemonParty_Scene
     return false
   end
 
-  #-----------------------------------------------------------------------------
-  # Self-contained switch flow. Box for the originally-picked Pokémon stays
-  # on icon_box_sel throughout; LEFT/RIGHT moves a target cursor (shown via
-  # the normal box highlight) between the other slots. Button list shows
-  # just Back while sitting on the original slot, Select+Back once moved to
-  # a different one. Header always reads "X selected" for the original
-  # pick. Confirming with Select on a different slot slides both affected
-  # boxes (and the shared name/HP/front-sprite display) off-screen using
-  # their normal slide animation, swaps the data, then slides back in.
-  #-----------------------------------------------------------------------------
   def pbPerformSwitch(screen)
     old_idx = @activecmd
     target  = @activecmd
@@ -1775,12 +1477,6 @@ class PokemonParty_Scene
     pbSelect(@activecmd)
   end
 
-  #-----------------------------------------------------------------------------
-  # Redraws the box highlight (original pick stays sel, target slot is
-  # shown via the same highlight box normally uses for the cursor), header
-  # text, and button list (Back only vs Select+Back) for the current
-  # target during the picking phase.
-  #-----------------------------------------------------------------------------
   def pbRefreshSwitchTargetUI(old_idx, target)
     6.times do |i|
       box = @sprites["box#{i}"]
@@ -1797,12 +1493,6 @@ class PokemonParty_Scene
       box.setBitmap(PARTY_FOLDER + file)
     end
     @sprites["cmd_highlight"].visible = false if @sprites["cmd_highlight"]
-
-    # Preview the target slot's Pokémon on the shared display (name bar,
-    # HP, level, front sprite, and the name_box_selector) while scrolling
-    # — @activecmd drives all of that, so point it at whichever slot is
-    # under the cursor. The original pick's box stays on sel regardless,
-    # set alongside the target's own sel state above.
     @activecmd = target
     pbDrawNameSelectorText
     @sprites["name_selector"].x = BOX_X_POSITIONS[target] + NAME_SELECTOR_OFFSET_X if @sprites["name_selector"]
@@ -1817,15 +1507,6 @@ class PokemonParty_Scene
     pbUpdateCommandButtons(true)
   end
 
-  #-----------------------------------------------------------------------------
-  # Positions the command highlight over the target's box while picking
-  # (skipped when target == old_idx, since that's the original pick's own
-  # box, already shown via sel)
-  #-----------------------------------------------------------------------------
-  #-----------------------------------------------------------------------------
-  # Header always reads "X selected" using the ORIGINAL pick's name, not
-  # whichever slot the cursor is currently previewing
-  #-----------------------------------------------------------------------------
   def pbDrawSwitchHeader(old_idx)
     spr = @sprites["button_bg"]
     return if !spr
@@ -1847,12 +1528,6 @@ class PokemonParty_Scene
     old_bitmap.dispose if old_bitmap && !old_bitmap.disposed? && old_bitmap != bmp
   end
 
-  #-----------------------------------------------------------------------------
-  # Slides the two affected boxes (and the shared name/HP/front-sprite
-  # display, since it only ever shows @activecmd) off-screen using their
-  # normal slide-out motion, swaps the underlying party data, then slides
-  # everything back in the normal way.
-  #-----------------------------------------------------------------------------
   def pbAnimateSwitch(old_idx, target, screen)
     pbSEPlay("GUI party switch") rescue nil
     pbZoomNameSelectorOut
@@ -1875,10 +1550,6 @@ class PokemonParty_Scene
       Input.update
     end
 
-    # Data swap while off-screen. Done directly here rather than via
-    # PokemonPartyScreen#pbSwitch, since that calls scene.pbSwitchBegin/
-    # pbSwitchEnd, which reference sprite names from vanilla's panel
-    # layout that this custom scene doesn't use.
     @party[old_idx], @party[target] = @party[target], @party[old_idx]
     @activecmd = target
     pbUpdatePartyIcons
@@ -1909,13 +1580,6 @@ class PokemonParty_Scene
     pbZoomNameSelectorIn
   end
 
-  #-----------------------------------------------------------------------------
-  # Returns the real PokemonPartyScreen object if PokemonPartyScreen has
-  # been patched to hand it to us (see the class reopen at the bottom of
-  # this file); falls back to self so a call chain that only ever does
-  # screen.scene.xxx still resolves, even though screen.some_other_method
-  # would still fail without the real owner.
-  #-----------------------------------------------------------------------------
   def pbGetPartyScreenOwner
     @screen_owner || self
   end
@@ -1947,18 +1611,11 @@ class PokemonParty_Scene
       return @activecmd
 
     when :special_battle_switch
-      # Same shape as vanilla's own quick-switch return, so the battle
-      # code calling this picker can tell "switch in this Pokémon" apart
-      # from the other battle-menu actions
       pbPlayDecisionSE
       pbClearSpecialMode
       return @activecmd
 
     when :special_battle_restore
-      # Opens the Bag through Battle::Scene#pbItemMenu and mirrors
-      # Battle::Battle#pbItemMenu's item-selection block, including turn
-      # registration via pbRegisterItem, so using an item here behaves
-      # identically to using one from the battle's own Bag command.
       if @battle_scene_ref && @battle_idx_battler
         oldsprites = pbFadeOutAndHide(@sprites)
         battle = @battle_scene_ref.instance_variable_get(:@battle)
@@ -2020,8 +1677,6 @@ class PokemonParty_Scene
       return nil
 
     when :special_battle_moves
-      # Opens the Summary screen on the Info page. Jumping straight to the
-      # Moves page is intended for the dedicated battle party UI.
       oldsprites = pbFadeOutAndHide(@sprites)
       summary_scene = PokemonSummary_Scene.new
       summary_screen = PokemonSummaryScreen.new(summary_scene, true)
@@ -2062,8 +1717,6 @@ class PokemonParty_Scene
       return nil
 
     when Hash
-      # Switch/Item get redirected to our own sub-menus instead of running
-      # their vanilla effect (which opens vanilla's own nested chooser/list)
       name = data["name"]
       if name == _INTL("Switch")
         pbPlayDecisionSE
@@ -2076,7 +1729,6 @@ class PokemonParty_Scene
         pbUpdateCommandButtons(true)
         return nil
       end
-      # Everything else (Summary, Debug, Mail) uses vanilla's own effect
       pbPlayDecisionSE
       data["effect"].call(screen, @party, @activecmd)
       pbBuildCommandList
@@ -2084,8 +1736,6 @@ class PokemonParty_Scene
       return nil
 
     when Array
-      # [:move, move_index] — a hidden move field command was picked from
-      # the main list; open the Use/Back sub-menu for it
       if data[0] == :move
         @pending_move_index = data[1]
         pbPlayDecisionSE
@@ -2100,10 +1750,6 @@ class PokemonParty_Scene
     end
   end
 
-  #-----------------------------------------------------------------------------
-  # Steps to the previous/next slot that actually has a Pokémon in it,
-  # wrapping around, so empty slots are never selectable
-  #-----------------------------------------------------------------------------
   def pbPrevPartyIndex(from)
     idx = from
     6.times do
@@ -2122,21 +1768,12 @@ class PokemonParty_Scene
     return from
   end
 
-  # Fallback so screen.scene.xxx resolves even if pbGetPartyScreenOwner had
-  # to fall back to self (no real PokemonPartyScreen owner was set)
   def scene
     self
   end
 
 end
 
-#===============================================================================
-# Hands the scene a back-reference to the real PokemonPartyScreen object, so
-# vanilla MenuHandlers effect procs (which expect screen.scene.xxx and
-# screen.some_method calls) work correctly when triggered from inside the
-# scene's own always-visible command list, instead of only from
-# PokemonPartyScreen#pbPokemonScreen like vanilla assumes.
-#===============================================================================
 class PokemonPartyScreen
   alias custom_party_screen_initialize initialize
   def initialize(scene, party)
@@ -2144,17 +1781,6 @@ class PokemonPartyScreen
     scene.screen_owner = self if scene.respond_to?(:screen_owner=)
   end
 
-  #-----------------------------------------------------------------------------
-  # Override pbPokemonGiveScreen — sets the scene's give-item mode before
-  # handing off to vanilla's own logic, so the party picker shows
-  # "Give X Itemname?" with Give/Cancel instead of the normal command list
-  #-----------------------------------------------------------------------------
-  #-----------------------------------------------------------------------------
-  # Override pbPokemonGiveScreen — loops so declining a swap ("No") returns
-  # to picking a Pokémon instead of ending the whole screen, and sets the
-  # scene's give-item mode so the picker shows "Give X Itemname?"/"Holding
-  # X" instead of the normal command list
-  #-----------------------------------------------------------------------------
   def pbPokemonGiveScreen(item)
     @scene.pbSetGiveItemMode(item) if @scene.respond_to?(:pbSetGiveItemMode)
     @scene.pbStartScene(@party, _INTL("Give to which Pokémon?"))
@@ -2167,8 +1793,6 @@ class PokemonPartyScreen
         ret = true
         break
       end
-      # Declined the swap — stay in the picker so a different Pokémon
-      # can be chosen instead
     end
     pbRefreshSingle(pkmnid) if defined?(pkmnid) && pkmnid && pkmnid >= 0
     @scene.pbEndScene
@@ -2176,10 +1800,6 @@ class PokemonPartyScreen
   end
 end
 
-#===============================================================================
-# Override pbGiveItemToPokemon — same logic as vanilla, but with shorter
-# wording for the swap confirmation and result messages
-#===============================================================================
 def pbGiveItemToPokemon(item, pkmn, scene, pkmnid = 0)
   newitemname = GameData::Item.get(item).portion_name
   if pkmn.egg?
@@ -2219,14 +1839,6 @@ def pbGiveItemToPokemon(item, pkmn, scene, pkmnid = 0)
   return false
 end
 
-#===============================================================================
-# Override pbMoveTutorChoose — vanilla constructs the party screen and
-# calls pbStartScene(helptext, ...) directly, with no way to pass along
-# which move is being taught. This mirrors vanilla's logic but calls
-# pbSetTeachMoveMode right after the screen is constructed, so the picker
-# shows "Teach MoveName?"/"Can't learn MoveName" with Learn/Cancel instead
-# of the normal command list.
-#===============================================================================
 def pbMoveTutorChoose(move, movelist = nil, bymachine = false, oneusemachine = false)
   ret = false
   move = GameData::Move.get(move).id
@@ -2266,13 +1878,6 @@ def pbMoveTutorChoose(move, movelist = nil, bymachine = false, oneusemachine = f
   return ret   # Returns whether the move was learned by a Pokemon
 end
 
-#===============================================================================
-# Override pbUseItem — vanilla constructs the party screen and calls
-# pbStartScene(helptext, ...) directly, with no way to pass the scene our
-# use-item mode. This mirrors vanilla's logic but calls pbSetUseItemMode
-# right after the screen is constructed, so the picker shows "Use
-# ItemName?" with Use/Cancel for each Pokémon considered.
-#===============================================================================
 def pbUseItem(bag, item, bagscene = nil)
   itm = GameData::Item.get(item)
   useType = itm.field_use
@@ -2338,14 +1943,6 @@ def pbUseItem(bag, item, bagscene = nil)
   return 0
 end
 
-#===============================================================================
-# Override Battle::Scene#pbPartyScreen — vanilla's version calls
-# scene.pbStartScene(msg, numPositions), which doesn't match this custom
-# scene's pbStartScene(party, helptext, ...) signature, and builds its own
-# inline command list rather than distinguishing an active battler from a
-# benched Pokémon. This mirrors vanilla's loop structure but calls the
-# scene correctly and uses pbSetBattleMode for the command list.
-#===============================================================================
 class Battle::Scene
   alias custom_party_pbPartyScreen pbPartyScreen
   def pbPartyScreen(idxBattler, canCancel = false, mode = 0)
@@ -2386,13 +1983,6 @@ class Battle::Scene
     pbFadeInAndShow(@sprites, visibleSprites)
   end
 
-  #-----------------------------------------------------------------------------
-  # Override pbItemMenu — vanilla's own version constructs pkmnScreen and
-  # calls pkmnScreen.pbStartScene(helptext, ...) directly, with no way to
-  # hand the scene our use-item mode. This is vanilla's exact logic
-  # (useType 1/2/3 branch), with pbSetUseItemMode called right after the
-  # party scene is constructed.
-  #-----------------------------------------------------------------------------
   def pbItemMenu(idxBattler, _firstAction)
     visibleSprites = pbFadeOutAndHide(@sprites)
     oldLastPocket = $bag.last_viewed_pocket

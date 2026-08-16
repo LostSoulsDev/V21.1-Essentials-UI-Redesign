@@ -112,6 +112,7 @@ class PokemonLoad_Scene
       area_h   = 366
       total_h  = (commands.length * @btn_h) + ((commands.length - 1) * BTN_GAP)
       @btn_y   = area_y + ((area_h - total_h) / 2)
+      @btn_y   = [@btn_y, 0].max
     end
     commands.length.times do |i|
       base = Bitmap.new(LOAD_FOLDER + btn_file)

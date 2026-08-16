@@ -1,82 +1,191 @@
-Useage instructions. All original methods are still kept so should not break existing events
-using the old call methods. This is a modification to add on new features. 
+# Speech Bubble System — Beginner's Guide
 
-Old system instructions:
-To call a window you will need to put a script call function before each Show Text command within the event. 
-Old method is pbCallBub(Window type,Event ID) Replace Event ID with the number of the event you want talking, for example:
+*For Carmaniac's (Lostsoulsdev's) Speech Bubble script, V3.0.2 — Essentials V21.1*
 
-pbCallBub(1,10) 10 is the event ID 1 is the window type you want. 
- 1 - Floating bubble
- 2 - Speech bubble with arrow
- 3 - Short arrow window
- 4 - Shocked window
- 
-Modified method for the old call method to make things easier, if you have an event that has multiple lines of text. 
-Instead of doing the script call every single time you can use the new helper method which should be used anyway instead of the
-old one going forward. 
+This guide explains how to make events and the player show speech bubbles, thought bubbles, and shocked reactions in your game. It covers the old method (still fully supported) and the new, easier methods added on top of it.
 
-pbSpeech(Window Type,Event ID,keepalive=false)
+---
 
-So like the old method you have the window type 1-4 and then the event ID. Now if you put true in the call, it will tell the script
-the talking event is the main one saving you having to put in the call multiple times for an event that has more than 1 Show Text call. 
+## 1. The Basics — Bubble Types
 
-When you are about to finish the text you will want to call the script before the Show Text function as pbSpeech(1,10,false)
-This will say you no longer want to have that event ID as the main speaker any more and you are about to change who is talking.
+Every method below asks you to pick a "window type." This is just a number from 1 to 4 that decides what the bubble looks like:
 
-New methods for the new bubble functions. 
-So now we have additional script calls and functions. The great thing about this new function is you can have dynamic floating bubbles
-that do not affect the gameplay when being shown. 
+| Number | Bubble type |
+|---|---|
+| 1 | Floating bubble |
+| 2 | Speech bubble with an arrow |
+| 3 | Short arrow window |
+| 4 | Shocked window |
 
-Two options:
+Keep this table handy — you'll use these numbers in almost every script call.
 
-	Option 1 - Event comments
+---
 
-If you have an event you would like to show a thought bubble over you can now add a comment in the event and use:
-pbSpeechBubbleShow(Event ID, "Text")
+## 2. The Original Method (still works)
 
-What this allows is an event to show a speech bubble above the target. So you can put pbSpeechBubbleShow(-1, "Ooops") as an example which 
-will show a thought bubble above the player and will follow the player. 
+This is the classic way of doing things. Nothing about it has changed, so any old events you've already built will keep working exactly as before.
 
-Some new options within that call now though:
+**How it works:** before every "Show Text" command in your event, add a script call:
 
-If you want that text to automatically disappear after a few seconds you can do pbSpeechBubble(-1, "Ooops", 3)
-The 3 will tell the script after 3 seconds, you want the text to dispose and not show again until the event page calls it. 
+```
+pbCallBub(WindowType, EventID)
+```
 
-You now also have distance tracking as an options too. 
-Adding :Max => Tiles will allow the event to only show the bubble if the player is within the number of tiles defined. 
-Please make sure when using this call, it's the last option otherwise weird things happen. For example:
-pbSpeechBubbleShow(-1, "Ooops", :Max => 4) 
+- `WindowType` — the bubble number from the table above (1–4)
+- `EventID` — the ID number of the event that's talking
 
-This will show text Ooops above the player only if the player is within 4 tiles of the event in any direction. 
-When the player walks away, the text will disappear. 
+**Example:** you want Event 10 to talk using a floating bubble:
 
-The function options are as follows:
+```
+pbCallBub(1, 10)
+```
 
-3 after the text - Time in seconds the window shows for
-:F - This means you want the window to fade in and out 
-:A - You want this bubble window to avoid others that are showing. 
-:Shock - This will show an animated shock bubble above the target
-:Max => Tiles - This must be at the end of the script call bracket to work, tells the script how many tiles the player needs to be in to show. 
+You'd place this script call directly above the Show Text command in that event's page.
 
-You can also manually call this via the script call function within the event. 
-For example, I want to show a shocked bubble that fades in and lasts for 3 seconds above event 10 you would do:
+**The catch:** if your event has several Show Text boxes in a row, you have to repeat this script call before *every single one*. That's what the newer method below fixes.
 
+---
+
+## 3. The Easier Method — `pbSpeech` (recommended for new events)
+
+This does the same job as `pbCallBub`, but it's smarter about events with multiple lines of dialogue. Use this one going forward instead of the old method.
+
+```
+pbSpeech(WindowType, EventID, KeepAlive)
+```
+
+- `WindowType` — the bubble number (1–4)
+- `EventID` — the ID of the talking event
+- `KeepAlive` — `true` or `false` (explained below)
+
+### What `KeepAlive` does
+
+If your event has multiple Show Text boxes back-to-back, you don't want to insert this script call before every one. Instead:
+
+1. Before the **first** Show Text, call it with `true`:
+   ```
+   pbSpeech(1, 10, true)
+   ```
+   This tells the script "Event 10 is the one talking right now — keep the bubble active until I say otherwise."
+
+2. You can now have as many Show Text boxes as you like without repeating the call.
+
+3. Right before the **last** line of dialogue (or when you're switching to a different speaker), call it again with `false`:
+   ```
+   pbSpeech(1, 10, false)
+   ```
+   This tells the script "Event 10 is done talking — stop treating it as the active speaker."
+
+**Quick way to remember it:** `true` = "start talking," `false` = "stop talking."
+
+---
+
+## 4. New Feature — Floating Speech Bubbles
+
+This is a completely new feature that lets events (or the player) show a bubble that floats above their head, without pausing the game or blocking movement. Great for ambient chatter, thought bubbles, "!" reactions, and so on.
+
+There are two ways to trigger one: through an **event comment**, or through a **script call**. Both use the same options — pick whichever fits how you build your events.
+
+### 4a. Using an Event Comment (easiest for most people)
+
+Add a comment inside your event that looks like this:
+
+```
+pbSpeechBubbleShow(EventID, "Text")
+```
+
+- `EventID` — the event that should show the bubble. Use **-1** to target the player instead of an event.
+- `"Text"` — whatever you want the bubble to say, in quotes.
+
+**Example — make the player show a thought bubble:**
+
+```
+pbSpeechBubbleShow(-1, "Ooops")
+```
+
+This bubble will follow the player around as they move.
+
+### 4b. Extra Options
+
+You can add more detail to the same call. These options are optional, but here's what each one does:
+
+| Option | What it does | Example |
+|---|---|---|
+| A number (seconds) | Bubble automatically disappears after this many seconds | `pbSpeechBubble(-1, "Ooops", 3)` → disappears after 3 seconds |
+| `:F` | Makes the bubble fade in and out smoothly | `pbSpeechBubble(10, "Help!", :F)` |
+| `:A` | Makes the bubble automatically move out of the way of other bubbles on screen | `pbSpeechBubble(10, "Help!", :A)` |
+| `:Shock` | Shows an animated "shocked" bubble instead of a normal one | `pbSpeechBubble(10, "Help!", :Shock)` |
+| `:Max => Tiles` | Only shows the bubble while the player is within a certain number of tiles of the event | `pbSpeechBubble(-1, "Ooops", :Max => 4)` |
+
+**Important rule:** if you use `:Max => Tiles`, it must always be the **last** thing in the brackets, or the script will behave oddly. Put every other option before it.
+
+**Example — bubble that only appears when the player is close:**
+
+```
+pbSpeechBubbleShow(-1, "Ooops", :Max => 4)
+```
+
+This will only show "Ooops" above the player while they're within 4 tiles of the event (in any direction). Walk away, and it disappears automatically. Walk back, and it reappears.
+
+**Example — combining several options:**
+
+```
 pbSpeechBubble(10, "Help!", 3, :F, :Shock)
-This will call the bubble over the event ID 10 with Help! and will fade in and shake with the shocked window skin before disappearing after 3 seconds. 
-You can stack multiple bubbles within the game screen by simply calling within the event each pbSpeechBubble command for each event id.
-Try avoiding having too many as again can get a bit weird. 
+```
 
-If you don't use the automatic clearing call, you can manually clear every bubble on screen by using 
+This shows a shocked, fading-in bubble saying "Help!" above Event 10, and it automatically disappears after 3 seconds.
+
+You can have multiple bubbles on screen at once — just call `pbSpeechBubble` for each event you want to show one. Try not to overdo it, though; too many bubbles at once can look messy.
+
+### 4c. Clearing Bubbles Manually
+
+If you didn't set an automatic timer, bubbles will stay on screen until you clear them yourself. To clear **every** bubble currently showing:
+
+```
 pbClearBub
+```
 
-This will clear all bubbles currently shown on the screen. 
+---
 
-And finally, I have added a seperate call function if you want an event to check if a player is nearby. 
+## 5. New Feature — Checking Player Distance
 
-pbCheckDist(tiles, eventID)
+Sometimes you just want to know *if* the player is near an event, without necessarily showing a bubble — for example, to trigger a movement or a cutscene once the player walks close enough.
 
-This script check will see if the player is within a certain number of tiles to the defined event and return true. 
-So for example if you have a conditional branch within an event that is running as parrell process. 
+```
+pbCheckDist(Tiles, EventID)
+```
 
-You can have this check active and it will trigger your events movements that you define within the conditional branch once the player is near that event. 
-Best not to do too many events with these on a map as can cause some major lag when over used. 
+- `Tiles` — how close (in tiles) the player needs to be
+- `EventID` — the event to measure distance from
+
+This returns `true` if the player is within range, and `false` if not.
+
+**Example use case:** put this inside a Conditional Branch, in an event running as a Parallel Process. When the player walks within range, the branch becomes true and can trigger movement, animations, or dialogue.
+
+**A word of caution:** avoid putting this check on too many events on the same map at once — checking distance constantly on lots of events can cause noticeable lag.
+
+---
+
+## 6. Quick Reference Cheat Sheet
+
+```
+pbCallBub(type, eventID)                          Old method — call before every Show Text
+pbSpeech(type, eventID, keepAlive)                New method — true to start, false to stop
+pbSpeechBubbleShow(eventID, "text", options)      Floating bubble via event comment
+pbSpeechBubble(eventID, "text", options)          Floating bubble via script call
+pbClearBub                                        Clears every bubble on screen
+pbCheckDist(tiles, eventID)                       Returns true/false if player is nearby
+```
+
+**Bubble types:** 1 = Floating · 2 = Speech bubble with arrow · 3 = Short arrow window · 4 = Shocked window
+
+**Floating bubble options (order matters — `:Max` always goes last):**
+- Number = seconds before auto-disappearing
+- `:F` = fade in/out
+- `:A` = avoid overlapping other bubbles
+- `:Shock` = shocked/animated style
+- `:Max => tiles` = only show within this many tiles of the player (must be last)
+
+---
+
+*All original script calls (`pbCallBub`, etc.) still work exactly as before — nothing in your existing events will break by installing this update.*

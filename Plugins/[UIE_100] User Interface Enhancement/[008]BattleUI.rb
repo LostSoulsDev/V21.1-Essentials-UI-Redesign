@@ -3,6 +3,10 @@
 #                               V 1.0.46
 #                        Developed by Carmaniac
 #===============================================================================
+# Replaces the default Pokémon Essentials battle UI (command bar, fight bar,
+# party ball tray, message box, and Bag/item flow) with a custom graphic set.
+# Works by reopening Battle::Scene, aliasing and overriding existing methods
+# where needed, and adding new supporting methods.
 module Settings
   CUSTOM_BATTLE_UI_GRAPHICS_PATH = "Graphics/Custom UI/Battle System/"
 end
@@ -2081,11 +2085,21 @@ class Battle::Scene
   end
 
   # The Fight page's own input loop
+  def pbOtherAllyStillToAct?(idxBattler)
+    @battle.allSameSideBattlers(idxBattler).each do |b|
+      next if b.index == idxBattler
+      next if b.fainted?
+      choice = @battle.choices[b.index]
+      next if choice && choice[0] != :None
+      return true
+    end
+    return false
+  end
+
   # TODO: Mega Evolution (Input::ACTION) and Shift (Input::SPECIAL) aren't
   # wired up yet either - megaEvoPossible is accepted but currently unused.
   def pbFightMenu(idxBattler, megaEvoPossible = false)
     battler = @battle.battlers[idxBattler]
-    wasSecondBattlerOfDouble = @cmdCancelWanted
     pbHideDataBoxes
     pbHideCommandButtons   # fight/bag/run/pokemon + icon_party/icon_foe exit - message box/prompt text stay up untouched
     currentKey = (@fightLastMoveKey && pbFightIndexEnabled?(@fightLastMoveKey, battler)) ? @fightLastMoveKey : "move0"
@@ -2155,14 +2169,12 @@ class Battle::Scene
       end
     end
 
-    if result && (@battle.singleBattle? || wasSecondBattlerOfDouble)
-      # Move accepted and there's nobody else left to act this round
+    if result && !pbOtherAllyStillToAct?(idxBattler)
       pbHideCommandPageAssets
     elsif result
-      # Move accepted, but this was the FIRST Pokemon of a double battle
       pbShowCommandButtons("fight")
     else
-      pbShowCommandButtons("fight")   # cancelled - bring the Command buttons back, message box was never touched
+      pbShowCommandButtons("fight")
     end
     pbShowDataBoxes
     return result
@@ -3912,7 +3924,6 @@ class Battle::Scene
   # Command menu (Battle#pbItemMenu
   alias customUI_pbItemMenu pbItemMenu
   def pbItemMenu(idxBattler, firstAction)
-    wasSecondBattlerOfDouble = @cmdCancelWanted
     pbHideDataBoxes
     pbHideCommandButtons
     pbScrollMessageBoxOut
@@ -3954,12 +3965,9 @@ class Battle::Scene
       # Pokémon, no effect, etc.)
       pbHideMessageBox
     end
-    if registered && (@battle.singleBattle? || wasSecondBattlerOfDouble)
-      # Item accepted and there's nobody else left to act this round - close
-      # the whole Command page, same as Fight/Run.
+    if registered && !pbOtherAllyStillToAct?(idxBattler)
       pbHideCommandPageAssets
     elsif registered
-      # Item accepted, but this was the FIRST Pokemon of a double battle
       pbShowCommandButtons("fight")
     end
     pbShowDataBoxes
@@ -4719,7 +4727,6 @@ class Battle::Scene
 
   #Party screen replacement. 
   def pbPartyMenu(idxBattler)
-    wasSecondBattlerOfDouble = @cmdCancelWanted
     pbHideDataBoxes
     pbHideCommandButtons   # fight/bag/run/pokemon + icon_party/icon_foe exit
     pbScrollMessageBoxOut  # "What will {1} do?" exits too - reloaded with new text below
@@ -4788,12 +4795,10 @@ class Battle::Scene
       end
     end
 
-    if result && (@battle.singleBattle? || wasSecondBattlerOfDouble)
+    if result && !pbOtherAllyStillToAct?(idxBattler)
       pbHideCommandPageAssets
     elsif result
       pbShowCommandButtons("fight")
-    else
-      #Cancelled
     end
     pbShowDataBoxes
     return result
